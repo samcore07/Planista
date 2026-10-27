@@ -7,8 +7,8 @@ export async function updateSession(request: NextRequest) {
   // If an auth exchange code lands at root ('/'), forward directly to /auth/callback
   const authCode = request.nextUrl.searchParams.get("code");
   if (authCode && request.nextUrl.pathname === "/") {
-    const callbackUrl = new URL("/auth/callback", request.url);
-    callbackUrl.search = request.nextUrl.search;
+    const callbackUrl = request.nextUrl.clone();
+    callbackUrl.pathname = "/auth/callback";
     return NextResponse.redirect(callbackUrl);
   }
 
@@ -57,14 +57,18 @@ export async function updateSession(request: NextRequest) {
 
   // If unauthorized user visits a protected route, redirect to login
   if (!user && isProtectedRoute) {
-    const redirectUrl = new URL("/auth/login", request.url);
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/auth/login";
     redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
 
   // If already authenticated user visits login/register, redirect to dashboard
   if (user && isAuthRoute) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    const dashboardUrl = request.nextUrl.clone();
+    dashboardUrl.pathname = "/dashboard";
+    dashboardUrl.search = "";
+    return NextResponse.redirect(dashboardUrl);
   }
 
   return response;

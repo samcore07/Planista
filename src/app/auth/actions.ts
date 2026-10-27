@@ -19,14 +19,28 @@ export type AuthActionResult = {
 async function getEffectiveOrigin(): Promise<string> {
   const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
   const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const protocol = headersList.get("x-forwarded-proto") || "http";
+  const forwardedHost = headersList.get("x-forwarded-host");
+  const host = forwardedHost || headersList.get("host") || "localhost:3000";
+  const protocol = headersList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
 
   if (host.includes("localhost") || host.includes("127.0.0.1")) {
     return `${protocol}://${host}`;
   }
 
+  // If the browser accessed via planista-five.vercel.app, preserve it
+  if (host.includes("planista-five.vercel.app")) {
+    return `https://${host}`;
+  }
+
+  // Guard against internal Vercel project domain alias without '-five'
+  if (host === "planista.vercel.app" || host.startsWith("planista.vercel.app")) {
+    return "https://planista-five.vercel.app";
+  }
+
   if (configuredAppUrl && !configuredAppUrl.includes("placeholder")) {
+    if (configuredAppUrl.includes("://planista.vercel.app")) {
+      return "https://planista-five.vercel.app";
+    }
     return configuredAppUrl;
   }
 
@@ -63,7 +77,19 @@ export async function signInWithPassword(formData: FormData): Promise<AuthAction
     };
   }
 
-  const redirectTo = formData.get("redirectTo")?.toString() || "/dashboard";
+  let redirectTo = formData.get("redirectTo")?.toString() || "/dashboard";
+  if (redirectTo.startsWith("http")) {
+    try {
+      const parsedUrl = new URL(redirectTo);
+      redirectTo = parsedUrl.pathname + parsedUrl.search;
+    } catch {
+      redirectTo = "/dashboard";
+    }
+  }
+  if (!redirectTo.startsWith("/")) {
+    redirectTo = "/dashboard";
+  }
+
   redirect(redirectTo);
 }
 

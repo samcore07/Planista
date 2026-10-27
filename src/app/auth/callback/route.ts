@@ -2,15 +2,28 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
-  const { searchParams, origin: requestOrigin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/dashboard";
 
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
   const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  const effectiveOrigin =
-    configuredAppUrl && !configuredAppUrl.includes("placeholder") && !requestOrigin.includes("localhost")
-      ? configuredAppUrl
-      : requestOrigin;
+
+  let effectiveOrigin: string;
+  if (forwardedHost && !forwardedHost.includes("localhost")) {
+    effectiveOrigin = `${forwardedProto}://${forwardedHost}`;
+  } else if (configuredAppUrl && !configuredAppUrl.includes("placeholder")) {
+    effectiveOrigin = configuredAppUrl;
+  } else {
+    const urlObj = new URL(request.url);
+    effectiveOrigin = urlObj.origin;
+  }
+
+  // Guard against internal Vercel project domain alias without '-five'
+  if (effectiveOrigin.includes("://planista.vercel.app")) {
+    effectiveOrigin = "https://planista-five.vercel.app";
+  }
 
   if (code) {
     const supabase = await createClient();
