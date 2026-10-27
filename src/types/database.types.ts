@@ -16,7 +16,7 @@ export type RiskSeverity = "low" | "medium" | "high" | "critical";
 export type DocumentType = "quote" | "invoice" | "receipt" | "contract" | "other";
 export type ExtractionStatus = "pending" | "processing" | "completed" | "failed";
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       profiles: {
@@ -43,6 +43,7 @@ export interface Database {
           avatar_url?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       events: {
         Row: {
@@ -67,6 +68,7 @@ export interface Database {
           event_type: string;
           description?: string | null;
           event_date?: string | null;
+          location?: string | null;
           guest_count?: number;
           total_budget?: number;
           currency?: string;
@@ -88,6 +90,7 @@ export interface Database {
           status?: EventStatus;
           updated_at?: string;
         };
+        Relationships: [];
       };
       event_collaborators: {
         Row: {
@@ -107,6 +110,7 @@ export interface Database {
         Update: {
           role?: CollaboratorRole;
         };
+        Relationships: [];
       };
       event_preferences: {
         Row: {
@@ -130,6 +134,7 @@ export interface Database {
           priorities?: Json;
           updated_at?: string;
         };
+        Relationships: [];
       };
       budget_categories: {
         Row: {
@@ -153,6 +158,7 @@ export interface Database {
           allocated_amount?: number;
           updated_at?: string;
         };
+        Relationships: [];
       };
       expenses: {
         Row: {
@@ -194,6 +200,7 @@ export interface Database {
           notes?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       vendors: {
         Row: {
@@ -235,6 +242,7 @@ export interface Database {
           notes?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       timeline_tasks: {
         Row: {
@@ -276,6 +284,7 @@ export interface Database {
           estimated_duration_hours?: number | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       task_dependencies: {
         Row: {
@@ -294,6 +303,7 @@ export interface Database {
           task_id?: string;
           depends_on_task_id?: string;
         };
+        Relationships: [];
       };
       theme_concepts: {
         Row: {
@@ -335,6 +345,7 @@ export interface Database {
           moodboard_urls?: Json;
           is_selected?: boolean;
         };
+        Relationships: [];
       };
       risk_assessments: {
         Row: {
@@ -373,6 +384,7 @@ export interface Database {
           is_resolved?: boolean;
           updated_at?: string;
         };
+        Relationships: [];
       };
       uploaded_documents: {
         Row: {
@@ -408,7 +420,12 @@ export interface Database {
           extraction_status?: ExtractionStatus;
           extracted_data?: Json;
         };
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
-}
+};
