@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ShowcaseNav } from "@/components/home/showcase-nav";
+import { HeaderAuthButtons, CtaAuthButton } from "@/components/home/header-auth-buttons";
 
 export default function Home() {
   const capabilities = [
@@ -192,19 +193,7 @@ export default function Home() {
 
           <ShowcaseNav />
 
-          <div className="flex items-center gap-3">
-            <Link href="/auth/login">
-              <Button variant="ghost" size="sm">
-                Sign In
-              </Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button size="sm" className="gap-1.5 shadow-sm">
-                Get Started
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Button>
-            </Link>
-          </div>
+          <HeaderAuthButtons />
         </div>
       </header>
 
@@ -536,11 +525,7 @@ export default function Home() {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/auth/login">
-                <Button variant="outline" size="lg" className="px-6">
-                  Sign In to Workspace
-                </Button>
-              </Link>
+              <CtaAuthButton />
             </div>
           </div>
         </section>
