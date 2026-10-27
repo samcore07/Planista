@@ -70,6 +70,11 @@
   --font-serif: "Didot", "Bodoni MT", "Cinzel", Georgia, serif;
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);

@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { ShowcaseNav } from "@/components/home/showcase-nav";
 
 export default function Home() {
   const capabilities = [
@@ -189,17 +190,7 @@ export default function Home() {
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition-colors">
-              Features
-            </a>
-            <a href="#architecture" className="hover:text-foreground transition-colors">
-              Architecture
-            </a>
-            <a href="#workflow" className="hover:text-foreground transition-colors">
-              Workflow
-            </a>
-          </nav>
+          <ShowcaseNav />
 
           <div className="flex items-center gap-3">
             <Link href="/auth/login">
