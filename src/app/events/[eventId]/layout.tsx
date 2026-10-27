@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { EventsDAL } from "@/lib/dal/events.dal";
+import { CopilotDAL } from "@/lib/dal/copilot.dal";
 import { EventSwitcher } from "@/components/events/event-switcher";
 import { EventWorkspaceNav } from "@/components/events/event-workspace-nav";
+import { CopilotDrawer } from "@/components/copilot/copilot-drawer";
 
 export const instant = false;
 
@@ -29,9 +31,10 @@ async function EventLayoutInner({
     redirect(`/auth/login?redirectTo=/events/${eventId}`);
   }
 
-  const [currentEvent, allEvents] = await Promise.all([
+  const [currentEvent, allEvents, copilotHistory] = await Promise.all([
     EventsDAL.getEventById(eventId),
     EventsDAL.getEvents(),
+    CopilotDAL.getHistory(eventId),
   ]);
 
   if (!currentEvent) {
@@ -91,6 +94,9 @@ async function EventLayoutInner({
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {children}
       </main>
+
+      {/* Persistent Planning Copilot Drawer */}
+      <CopilotDrawer eventId={eventId} initialHistory={copilotHistory} />
     </div>
   );
 }
