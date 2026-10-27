@@ -1,5 +1,6 @@
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { type Database, TaskPriority, TaskStatus } from "@/types/database.types";
+import { TimelineService, DelayedTaskImpact } from "@/services/timeline.service";
 import { z } from "zod";
 
 export const createTaskSchema = z.object({
@@ -104,5 +105,92 @@ export class TasksDAL {
 
     if (error || !data) throw new Error(`Failed to update task: ${error?.message}`);
     return data;
+  }
+
+  static async deleteTask(taskId: string): Promise<boolean> {
+    const user = await getAuthenticatedUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const supabase = await createClient();
+    const { error } = await supabase.from("timeline_tasks").delete().eq("id", taskId);
+    if (error) throw new Error(`Failed to delete task: ${error.message}`);
+    return true;
+  }
+
+  static async addDependency(
+    eventId: string,
+    taskId: string,
+    dependsOnTaskId: string
+  ): Promise<DependencyRow> {
+    if (taskId === dependsOnTaskId) {
+      throw new Error("Self-dependencies are invalid: A task cannot depend on itself.");
+    }
+
+    const user = await getAuthenticatedUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const currentDeps = await this.getDependencies(eventId);
+    const candidateDeps = [
+      ...currentDeps.map((d) => ({
+        taskId: d.task_id,
+        dependsOnTaskId: d.depends_on_task_id,
+      })),
+      { taskId, dependsOnTaskId },
+    ];
+
+    if (TimelineService.detectCycle(candidateDeps)) {
+      throw new Error("Circular dependency detected: Adding this prerequisite creates a cycle.");
+    }
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("task_dependencies")
+      .insert({
+        task_id: taskId,
+        depends_on_task_id: dependsOnTaskId,
+      })
+      .select()
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to add dependency: ${error?.message || "Already exists"}`);
+    }
+
+    return data;
+  }
+
+  static async removeDependency(taskId: string, dependsOnTaskId: string): Promise<boolean> {
+    const user = await getAuthenticatedUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("task_dependencies")
+      .delete()
+      .eq("task_id", taskId)
+      .eq("depends_on_task_id", dependsOnTaskId);
+
+    if (error) throw new Error(`Failed to remove dependency: ${error.message}`);
+    return true;
+  }
+
+  static async applyBatchScheduleShift(impacts: DelayedTaskImpact[]): Promise<void> {
+    const user = await getAuthenticatedUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const supabase = await createClient();
+    for (const impact of impacts) {
+      const { error } = await supabase
+        .from("timeline_tasks")
+        .update({
+          due_date: impact.proposedDueDate,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", impact.taskId);
+
+      if (error) {
+        throw new Error(`Failed to shift task schedule: ${error.message}`);
+      }
+    }
   }
 }
