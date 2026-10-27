@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { type Database } from "@/types/database.types";
 import { env } from "@/config/env";
@@ -24,6 +25,27 @@ export async function createClient() {
             // This can be ignored if you have middleware refreshing user sessions.
           }
         },
+      },
+    }
+  );
+}
+
+/**
+ * Returns a server-only Supabase client with the service role key.
+ * Used exclusively in verified server boundaries where the caller's session has already been checked.
+ */
+export function createAdminClient() {
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for admin client");
+  }
+
+  return createSupabaseClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.SUPABASE_SERVICE_ROLE_KEY,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
       },
     }
   );

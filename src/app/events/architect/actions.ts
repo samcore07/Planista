@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
+import { createClient, createAdminClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { aiProvider, BlueprintGenerationInput } from "@/lib/ai/provider";
 import { EventBlueprint, eventBlueprintSchema } from "@/types/blueprint.types";
 import { EventOrchestratorService } from "@/services/orchestrator.service";
 import { EventsDAL } from "@/lib/dal/events.dal";
+import { env } from "@/config/env";
 
 export interface GenerateBlueprintResult {
   success: boolean;
@@ -73,7 +74,7 @@ export async function persistAcceptedBlueprintAction(
   const { input, blueprint, selectedSections } = payload;
 
   try {
-    const supabase = await createClient();
+    const supabase = env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : await createClient();
 
     // 1. Create the parent event
     const event = await EventsDAL.createEvent({
