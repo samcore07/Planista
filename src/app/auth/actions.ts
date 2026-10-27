@@ -16,6 +16,23 @@ export type AuthActionResult = {
   message?: string;
 };
 
+async function getEffectiveOrigin(): Promise<string> {
+  const configuredAppUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  const headersList = await headers();
+  const host = headersList.get("host") || "localhost:3000";
+  const protocol = headersList.get("x-forwarded-proto") || "http";
+
+  if (host.includes("localhost") || host.includes("127.0.0.1")) {
+    return `${protocol}://${host}`;
+  }
+
+  if (configuredAppUrl && !configuredAppUrl.includes("placeholder")) {
+    return configuredAppUrl;
+  }
+
+  return `${protocol}://${host}`;
+}
+
 /**
  * Signs in a user with verified email and password
  */
@@ -68,10 +85,7 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
     };
   }
 
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const protocol = headersList.get("x-forwarded-proto") || "http";
-  const origin = `${protocol}://${host}`;
+  const origin = await getEffectiveOrigin();
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
@@ -108,10 +122,7 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
  * Initiates Google OAuth redirect
  */
 export async function signInWithGoogle(): Promise<void> {
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const protocol = headersList.get("x-forwarded-proto") || "http";
-  const origin = `${protocol}://${host}`;
+  const origin = await getEffectiveOrigin();
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -153,10 +164,7 @@ export async function requestPasswordReset(formData: FormData): Promise<AuthActi
     };
   }
 
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const protocol = headersList.get("x-forwarded-proto") || "http";
-  const origin = `${protocol}://${host}`;
+  const origin = await getEffectiveOrigin();
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
