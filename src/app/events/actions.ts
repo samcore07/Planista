@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { EventsDAL, createEventInputSchema, updateEventInputSchema } from "@/lib/dal/events.dal";
+import { EventOrchestratorService } from "@/services/orchestrator.service";
 
 export async function createEventAction(formData: FormData): Promise<void> {
   const title = formData.get("title") as string;
@@ -73,6 +74,7 @@ export async function updateEventAction(eventId: string, formData: FormData): Pr
 
   try {
     await EventsDAL.updateEvent(eventId, parsed.data);
+    await EventOrchestratorService.recalculateEventState(eventId);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update event";
     redirect(`/events/${eventId}/settings?error=${encodeURIComponent(message)}`);
