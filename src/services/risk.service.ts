@@ -8,11 +8,18 @@ export interface EvaluatedRisk {
   eventId: string;
   title: string;
   severity: RiskSeverity;
-  category: "budget" | "timeline" | "vendor" | "venue" | "payment";
+  category: "budget" | "timeline" | "vendor" | "venue" | "payment" | "planning";
   explanation: string;
   supportingFacts: string[];
   mitigationAction: string;
+  affectedResources?: string[];
+  source?: "deterministic" | "ai_recommendation";
   isResolved: boolean;
+}
+
+export interface VenueCapacityInfo {
+  venueName?: string;
+  maxCapacity?: number;
 }
 
 export interface VendorSummaryItem {
@@ -62,6 +69,8 @@ export class RiskService {
         ],
         mitigationAction:
           "Review category line items with overages or negotiate lower vendor quote terms to bring total expenses within the authorized cap.",
+        affectedResources: ["Total Event Budget"],
+        source: "deterministic",
         isResolved: false,
       });
     }
@@ -80,6 +89,8 @@ export class RiskService {
             `Actual: $${cat.actualAmount.toFixed(2)}`,
           ],
           mitigationAction: `Reallocate surplus funds from an under-utilized category or reduce non-essential scope in ${cat.categoryName}.`,
+          affectedResources: [cat.categoryName],
+          source: "deterministic",
           isResolved: false,
         });
       }
@@ -108,12 +119,15 @@ export class RiskService {
         ],
         mitigationAction:
           "Re-evaluate task priorities or trigger automated schedule propagation to recalculate realistic completion targets.",
+        affectedResources: overdueTitles,
+        source: "deterministic",
         isResolved: false,
       });
     }
 
     // Blocked tasks
     if (timelineAnalysis.blockedTasks.length > 0) {
+      const blockedTitles = timelineAnalysis.blockedTasks.map((t) => t.title).slice(0, 3);
       risks.push({
         eventId,
         title: `${timelineAnalysis.blockedTasks.length} Blocked Task(s) Waiting on Dependencies`,
@@ -121,10 +135,12 @@ export class RiskService {
         category: "timeline",
         explanation: `Several tasks cannot commence because prerequisite dependencies remain incomplete.`,
         supportingFacts: [
-          `Blocked tasks: ${timelineAnalysis.blockedTasks.map((t) => t.title).slice(0, 3).join(", ")}`,
+          `Blocked tasks: ${blockedTitles.join(", ")}`,
         ],
         mitigationAction:
           "Accelerate completion of bottleneck prerequisite tasks to unblock downstream workflow.",
+        affectedResources: blockedTitles,
+        source: "deterministic",
         isResolved: false,
       });
     }
@@ -140,6 +156,8 @@ export class RiskService {
         supportingFacts: ["Circular graph cycle identified in task dependencies table"],
         mitigationAction:
           "Break the cyclical dependency by detaching the circular predecessor relationship.",
+        affectedResources: ["Dependency Graph"],
+        source: "deterministic",
         isResolved: false,
       });
     }
@@ -160,6 +178,8 @@ export class RiskService {
         supportingFacts: ["No venue record with 'quoted' or 'contracted' status in vendor registry"],
         mitigationAction:
           "Prioritize venue shortlisting and secure a written quotation to finalize date and guest capacity constraints.",
+        affectedResources: ["Venue Category"],
+        source: "deterministic",
         isResolved: false,
       });
     }
@@ -190,6 +210,32 @@ export class RiskService {
         ),
         mitigationAction:
           "Verify funds availability and initiate vendor deposits/disbursements prior to the deadline to avoid service cancellation.",
+        affectedResources: urgentPayments.map((p) => p.title),
+        source: "deterministic",
+        isResolved: false,
+      });
+    }
+
+    // 6. Missing Contingency Reserve Buffer Check
+    const hasContingency = budgetMetrics.categories.some(
+      (c) =>
+        c.categoryName.toLowerCase().includes("contingency") ||
+        c.categoryName.toLowerCase().includes("reserve") ||
+        c.categoryName.toLowerCase().includes("buffer")
+    );
+    if (!hasContingency && budgetMetrics.totalBudget > 0) {
+      risks.push({
+        eventId,
+        title: "Missing Contingency Reserve Allocation",
+        severity: "medium",
+        category: "budget",
+        explanation:
+          "No dedicated contingency reserve category was identified. Events typically incur 5-10% in unforeseen logistical expenses.",
+        supportingFacts: ["Zero allocation designated for unforeseen overruns or emergency vendor fees"],
+        mitigationAction:
+          "Establish a 5% to 10% contingency allocation line item before committing discretionary decor or entertainment budgets.",
+        affectedResources: ["Budget Categories"],
+        source: "deterministic",
         isResolved: false,
       });
     }

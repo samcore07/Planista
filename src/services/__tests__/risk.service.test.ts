@@ -82,4 +82,21 @@ describe("RiskService & Radar Engine", () => {
     expect(paymentRisk?.severity).toBe("high");
     expect(paymentRisk?.supportingFacts[0]).toContain("$3000.00 due on 2026-10-30");
   });
+
+  it("identifies missing contingency reserve allocation and tags source as deterministic", () => {
+    const budgetMetrics = BudgetService.calculate(
+      25000,
+      100,
+      [{ id: "c1", eventId: "e1", name: "Catering", allocatedAmount: 25000 }],
+      []
+    );
+
+    const risks = RiskService.evaluate("e1", budgetMetrics, [], [], [], [], refDate);
+    const contingencyRisk = risks.find((r) => r.title.includes("Missing Contingency"));
+
+    expect(contingencyRisk).toBeDefined();
+    expect(contingencyRisk?.severity).toBe("medium");
+    expect(contingencyRisk?.source).toBe("deterministic");
+    expect(contingencyRisk?.affectedResources).toContain("Budget Categories");
+  });
 });
