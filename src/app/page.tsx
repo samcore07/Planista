@@ -175,29 +175,6 @@ export default function Home() {
     },
   ];
 
-  const tutorialChapters = [
-    {
-      time: "00:00 - 01:15",
-      title: "AI Architect Intake",
-      desc: "Generating structured Zod blueprints from natural language inputs.",
-    },
-    {
-      time: "01:15 - 02:30",
-      title: "Live Budget & OCR",
-      desc: "Uploading receipt quotes with automated discrepancy detection.",
-    },
-    {
-      time: "02:30 - 03:45",
-      title: "CPM Logistics & Graph",
-      desc: "Interactive dependency flowcharts and slack float analysis.",
-    },
-    {
-      time: "03:45 - 05:00",
-      title: "Event Pack Export",
-      desc: "Compiling verified run sheets, printable briefs, and ledger CSVs.",
-    },
-  ];
-
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-accent selection:text-accent-foreground">
       {/* Header / Navigation */}
@@ -572,39 +549,9 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Video Frame */}
+            {/* Video Frame & Chapter Highlights */}
             <div className="relative mx-auto max-w-4xl">
-              <div className="relative rounded-2xl border border-border/80 bg-card p-2.5 sm:p-3.5 shadow-2xl backdrop-blur-xl">
-                <TutorialVideo />
-              </div>
-
-              {/* Timestamp / Chapter Highlights */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
-                {tutorialChapters.map((ch, idx) => (
-                  <div
-                    key={idx}
-                    className="group relative p-4 rounded-xl border border-border/80 bg-card/90 hover:bg-card hover:border-primary/50 transition-all duration-300 hover:shadow-md text-left space-y-2.5 overflow-hidden"
-                  >
-                    {/* Top ambient hover gradient glow */}
-                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-transparent group-hover:bg-gradient-to-r group-hover:from-primary/40 group-hover:via-emerald-400 group-hover:to-primary/40 transition-all duration-300" />
-                    
-                    {/* Visual, professional timestamp badge */}
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 dark:bg-emerald-950/40 border border-primary/20 dark:border-emerald-500/30 text-primary dark:text-emerald-300 text-[10px] font-mono font-semibold tracking-tight shadow-xs transition-colors group-hover:bg-primary/20 group-hover:border-primary/40">
-                      <PlayCircle className="h-3 w-3 shrink-0 text-primary dark:text-emerald-400 transition-transform group-hover:scale-110" />
-                      <span>{ch.time}</span>
-                    </div>
-
-                    <h4 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors flex items-center justify-between">
-                      <span>{ch.title}</span>
-                      <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary shrink-0" />
-                    </h4>
-
-                    <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
-                      {ch.desc}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              <TutorialVideo />
             </div>
           </div>
         </section>

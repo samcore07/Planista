@@ -12,7 +12,7 @@
 [![Accessibility](https://img.shields.io/badge/WCAG-2.2_AAA-success?style=flat-square)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
-[**Live Demo**](https://planista-five.vercel.app) • [**Architecture**](#system-architecture) • [**Core Engines**](#core-engines) • [**Getting Started**](#getting-started-from-scratch) • [**Verification**](#testing--verification-suite)
+[**Live Demo**](https://planista-five.vercel.app) • [**Video Walkthrough (03:54)**](https://youtu.be/nCGiojMqvQI) • [**Architecture**](#system-architecture) • [**Core Engines**](#core-engines) • [**Getting Started**](#getting-started-from-scratch) • [**Verification**](#testing--verification-suite)
 
 </div>
 
@@ -21,6 +21,23 @@
 ## Overview
 
 **Planista** is a full-lifecycle event planning and production platform that bridges generative AI creativity with deterministic, decimal-safe domain engineering. It turns natural language descriptions into complete, editable event blueprints with validated schedules, line-item budgets, vendor needs, design aesthetics, and proactive risk audits.
+
+### Video Walkthrough & Live Demo
+
+Watch the official 4-minute submission walkthrough of Planista in action:
+
+[![Watch Demo Video](https://img.shields.io/badge/YouTube-Watch%20Demo%20(03:54)-red?style=for-the-badge&logo=youtube)](https://youtu.be/nCGiojMqvQI)
+
+| Timestamp | Chapter | Focus & Capabilities Shown |
+| :--- | :--- | :--- |
+| **00:00 – 00:25** | **Intro & Auth** | Live email validation, error handling, and secure session onboarding |
+| **00:25 – 00:46** | **Dashboard** | Centralized command center, real-time KPI cards, and event telemetry |
+| **00:46 – 01:25** | **AI Architect** | Natural language brief intake with real-time LLaMA 3.3 blueprint generation |
+| **01:25 – 02:06** | **Overview & Budget** | Event telemetry hub and deterministic zero-LLM financial balance ledger |
+| **02:06 – 02:46** | **Timeline & Logistics** | CPM critical path DAG, 0ms optimistic task completion, and manifests |
+| **02:46 – 03:02** | **Risk Radar & Doc Scanner** | Severity-likelihood matrix and live browser-based QR ticket check-in |
+| **03:02 – 03:37** | **Theme Studio & Copilot** | Dynamic zero-reflow CSS themes and inline AI planning assistance |
+| **03:37 – 03:54** | **Export Pack** | One-click print-ready PDF Run-of-Show and JSON dossier backup |
 
 ### The Architectural Axiom: Zero LLM Financial Math
 
