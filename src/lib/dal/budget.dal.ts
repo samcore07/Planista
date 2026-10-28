@@ -95,6 +95,20 @@ export class BudgetDAL {
     const input = createExpenseSchema.parse(rawInput);
     const supabase = await createClient();
 
+    // Reconcile mathematical status & deposits paid
+    const actual = Number(input.actualAmount || 0);
+    let status = input.paymentStatus as PaymentStatus;
+    let depositPaid = Number(input.depositPaid || 0);
+
+    if (status === "fully_paid") {
+      depositPaid = actual;
+    } else if (depositPaid >= actual && actual > 0) {
+      status = "fully_paid";
+      depositPaid = actual;
+    } else if (depositPaid > 0 && depositPaid < actual && status === "unpaid") {
+      status = "deposit_paid";
+    }
+
     const { data, error } = await supabase
       .from("expenses")
       .insert({
@@ -103,9 +117,9 @@ export class BudgetDAL {
         title: input.title,
         estimated_amount: input.estimatedAmount,
         actual_amount: input.actualAmount,
-        deposit_paid: input.depositPaid,
+        deposit_paid: depositPaid,
         due_date: input.dueDate ?? null,
-        payment_status: input.paymentStatus as PaymentStatus,
+        payment_status: status,
         notes: input.notes ?? null,
       })
       .select()
@@ -122,16 +136,35 @@ export class BudgetDAL {
     const input = updateExpenseSchema.parse(rawInput);
     const supabase = await createClient();
 
+    let status = input.paymentStatus as PaymentStatus | undefined;
+    let depositPaid = input.depositPaid;
+    const actual = input.actualAmount;
+
+    // Fetch existing expense if needed to reconcile actual and deposit
+    if (status === "fully_paid" && actual !== undefined) {
+      depositPaid = actual;
+    } else if (status === "fully_paid" && depositPaid === undefined) {
+      const { data: curr } = await supabase.from("expenses").select("actual_amount").eq("id", expenseId).single();
+      if (curr) depositPaid = Number(curr.actual_amount);
+    } else if (depositPaid !== undefined && actual !== undefined) {
+      if (depositPaid >= actual && actual > 0) {
+        status = "fully_paid";
+        depositPaid = actual;
+      } else if (depositPaid > 0 && depositPaid < actual && (!status || status === "unpaid")) {
+        status = "deposit_paid";
+      }
+    }
+
     const { data, error } = await supabase
       .from("expenses")
       .update({
         ...(input.categoryId !== undefined && { category_id: input.categoryId }),
         ...(input.title !== undefined && { title: input.title }),
         ...(input.estimatedAmount !== undefined && { estimated_amount: input.estimatedAmount }),
-        ...(input.actualAmount !== undefined && { actual_amount: input.actualAmount }),
-        ...(input.depositPaid !== undefined && { deposit_paid: input.depositPaid }),
+        ...(actual !== undefined && { actual_amount: actual }),
+        ...(depositPaid !== undefined && { deposit_paid: depositPaid }),
         ...(input.dueDate !== undefined && { due_date: input.dueDate }),
-        ...(input.paymentStatus !== undefined && { payment_status: input.paymentStatus as PaymentStatus }),
+        ...(status !== undefined && { payment_status: status }),
         ...(input.notes !== undefined && { notes: input.notes }),
         updated_at: new Date().toISOString(),
       })

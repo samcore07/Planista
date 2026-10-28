@@ -122,7 +122,17 @@ export class ExportService {
    */
   static generateBudgetCsv(bundle: EventExportBundle): string {
     const rows: string[][] = [
-      ["Category", "Expense Title", "Estimated Amount", "Actual Amount", "Deposit Paid", "Due Date", "Payment Status", "Notes"],
+      [
+        "Category",
+        "Expense Title",
+        "Estimated Amount",
+        "Actual Amount",
+        "Deposit Paid",
+        "Amount Left",
+        "Due Date",
+        "Payment Status",
+        "Notes",
+      ],
     ];
 
     const categoryMap = new Map<string, string>();
@@ -130,12 +140,18 @@ export class ExportService {
 
     for (const exp of bundle.expenses) {
       const categoryName = exp.category_id ? categoryMap.get(exp.category_id) || "Uncategorized" : "Uncategorized";
+      const actual = Number(exp.actual_amount);
+      const isFullyPaid = exp.payment_status === "fully_paid";
+      const depositPaid = isFullyPaid ? actual : Math.min(actual, Number(exp.deposit_paid || 0));
+      const amountLeft = isFullyPaid ? 0 : Math.max(0, actual - depositPaid);
+
       rows.push([
         categoryName,
         exp.title,
         Number(exp.estimated_amount).toFixed(2),
-        Number(exp.actual_amount).toFixed(2),
-        Number(exp.deposit_paid).toFixed(2),
+        actual.toFixed(2),
+        depositPaid.toFixed(2),
+        amountLeft.toFixed(2),
         exp.due_date || "N/A",
         exp.payment_status,
         exp.notes || "",
@@ -402,22 +418,34 @@ export class ExportService {
         <th>Due Date</th>
         <th style="text-align: right">Estimated</th>
         <th style="text-align: right">Actual</th>
+        <th style="text-align: right">Deposit Paid</th>
+        <th style="text-align: right">Amount Left</th>
       </tr>
     </thead>
     <tbody>
       ${
         expenses.length === 0
-          ? `<tr><td colspan="5" style="text-align: center; color: #6b7280;">No expenses recorded yet.</td></tr>`
+          ? `<tr><td colspan="7" style="text-align: center; color: #6b7280;">No expenses recorded yet.</td></tr>`
           : expenses
               .map(
-                (e) => `
+                (e) => {
+                  const actual = Number(e.actual_amount);
+                  const isFullyPaid = e.payment_status === "fully_paid";
+                  const depositPaid = isFullyPaid ? actual : Math.min(actual, Number(e.deposit_paid || 0));
+                  const amountLeft = isFullyPaid ? 0 : Math.max(0, actual - depositPaid);
+                  return `
         <tr>
           <td><strong>${escapeHtml(e.title)}</strong></td>
-          <td><span class="badge badge-low">${escapeHtml(e.payment_status)}</span></td>
+          <td><span class="badge ${isFullyPaid ? 'badge-medium' : 'badge-low'}">${escapeHtml(e.payment_status)}</span></td>
           <td>${e.due_date ? e.due_date.split("T")[0] : "—"}</td>
           <td style="text-align: right">${event.currency} ${Number(e.estimated_amount).toFixed(2)}</td>
-          <td style="text-align: right"><strong>${event.currency} ${Number(e.actual_amount).toFixed(2)}</strong></td>
-        </tr>`
+          <td style="text-align: right"><strong>${event.currency} ${actual.toFixed(2)}</strong></td>
+          <td style="text-align: right">${event.currency} ${depositPaid.toFixed(2)}</td>
+          <td style="text-align: right; color: ${amountLeft > 0 ? '#b45309' : '#15803d'}">
+            <strong>${event.currency} ${amountLeft.toFixed(2)}</strong>
+          </td>
+        </tr>`;
+                }
               )
               .join("")
       }

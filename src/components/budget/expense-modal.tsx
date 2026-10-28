@@ -20,6 +20,49 @@ export function ExpenseModal({ eventId, categories, expense, trigger }: ExpenseM
   const [isOpen, setIsOpen] = React.useState(false);
   const isEditing = !!expense;
 
+  const initialActual = expense?.actual_amount ? Number(expense.actual_amount) : 0;
+  const initialStatus = expense?.payment_status || "unpaid";
+  const initialDeposit = initialStatus === "fully_paid"
+    ? initialActual
+    : (expense?.deposit_paid ? Number(expense.deposit_paid) : 0);
+
+  const [actualAmount, setActualAmount] = React.useState<number>(initialActual);
+  const [depositPaid, setDepositPaid] = React.useState<number>(initialDeposit);
+  const [paymentStatus, setPaymentStatus] = React.useState<string>(initialStatus);
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextStatus = e.target.value;
+    setPaymentStatus(nextStatus);
+    if (nextStatus === "fully_paid") {
+      setDepositPaid(actualAmount);
+    } else if (nextStatus === "unpaid" && depositPaid === actualAmount) {
+      setDepositPaid(0);
+    }
+  };
+
+  const handleActualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextActual = Math.max(0, Number(e.target.value || 0));
+    setActualAmount(nextActual);
+    if (paymentStatus === "fully_paid") {
+      setDepositPaid(nextActual);
+    }
+  };
+
+  const handleDepositChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextDeposit = Math.max(0, Number(e.target.value || 0));
+    setDepositPaid(nextDeposit);
+    if (nextDeposit >= actualAmount && actualAmount > 0) {
+      setPaymentStatus("fully_paid");
+    } else if (nextDeposit > 0 && paymentStatus === "unpaid") {
+      setPaymentStatus("deposit_paid");
+    } else if (nextDeposit === 0 && paymentStatus === "deposit_paid") {
+      setPaymentStatus("unpaid");
+    }
+  };
+
+  const effectivePaid = paymentStatus === "fully_paid" ? actualAmount : Math.min(actualAmount, depositPaid);
+  const amountLeft = Math.max(0, actualAmount - effectivePaid);
+
   const handleSubmit = (formData: FormData) => {
     setIsOpen(false);
     if (isEditing && expense) {
@@ -91,12 +134,13 @@ export function ExpenseModal({ eventId, categories, expense, trigger }: ExpenseM
                   <select
                     id="paymentStatus"
                     name="paymentStatus"
-                    defaultValue={expense?.payment_status || "unpaid"}
+                    value={paymentStatus}
+                    onChange={handleStatusChange}
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
                     <option value="unpaid">Unpaid</option>
                     <option value="deposit_paid">Deposit Paid</option>
-                    <option value="fully_paid">Fully Paid</option>
+                    <option value="fully_paid">Fully Paid (Paid Once)</option>
                   </select>
                 </div>
               </div>
@@ -122,20 +166,39 @@ export function ExpenseModal({ eventId, categories, expense, trigger }: ExpenseM
                     type="number"
                     step="0.01"
                     min="0"
-                    defaultValue={expense?.actual_amount ? Number(expense.actual_amount) : 0}
+                    value={actualAmount}
+                    onChange={handleActualChange}
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="depositPaid">Deposit Paid</Label>
+                  <Label htmlFor="depositPaid">Deposit / Paid</Label>
                   <Input
                     id="depositPaid"
                     name="depositPaid"
                     type="number"
                     step="0.01"
                     min="0"
-                    defaultValue={expense?.deposit_paid ? Number(expense.deposit_paid) : 0}
+                    value={depositPaid}
+                    onChange={handleDepositChange}
                   />
+                </div>
+              </div>
+
+              {/* Live Mathematical Payment Reconciliation */}
+              <div className="rounded-lg border border-border/80 bg-secondary/30 p-2.5 flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-muted-foreground font-medium">Deposit Paid: </span>
+                  <strong className="text-foreground">₹{effectivePaid.toFixed(2)}</strong>
+                  {paymentStatus === "fully_paid" && (
+                    <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium ml-1.5">(Paid in full)</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-muted-foreground font-medium">Amount Left: </span>
+                  <strong className={amountLeft > 0 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"}>
+                    ₹{amountLeft.toFixed(2)} {amountLeft === 0 ? "(Cleared)" : ""}
+                  </strong>
                 </div>
               </div>
 

@@ -113,10 +113,13 @@ export async function confirmScannedExpenseAction(
   const categoryIdRaw = formData.get("categoryId") as string;
   const categoryId = categoryIdRaw && categoryIdRaw !== "uncategorized" ? categoryIdRaw : null;
   const actualAmount = Number(formData.get("actualAmount") || 0);
-  const depositPaid = Number(formData.get("depositPaid") || 0);
+  const rawDepositPaid = Number(formData.get("depositPaid") || 0);
   const dueDate = (formData.get("dueDate") as string) || null;
   const paymentStatus = (formData.get("paymentStatus") as "unpaid" | "deposit_paid" | "fully_paid") || "unpaid";
   const notes = (formData.get("notes") as string) || "";
+
+  // If fully_paid (paid in full / once), deposit equals full actual amount
+  const depositPaid = paymentStatus === "fully_paid" ? actualAmount : Math.min(actualAmount, rawDepositPaid);
 
   let saveSuccess = false;
   try {

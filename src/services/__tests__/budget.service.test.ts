@@ -98,4 +98,41 @@ describe("BudgetService & Deterministic Currency Calculations", () => {
     const cost = BudgetService.calculateCostPerGuest(30000, 0);
     expect(cost).toBe(0);
   });
+
+  it("reconciles fully_paid expenses as 100% deposit paid with zero outstanding balance", () => {
+    const categories: BudgetCategoryItem[] = [
+      { id: "cat-1", eventId: "ev-1", name: "Catering", allocatedAmount: 10000 },
+    ];
+    const expenses: ExpenseItem[] = [
+      {
+        id: "exp-1",
+        eventId: "ev-1",
+        categoryId: "cat-1",
+        title: "Wedding Cake",
+        estimatedAmount: 2000,
+        actualAmount: 2200,
+        depositPaid: 0, // entered as 0 but marked fully paid
+        dueDate: null,
+        paymentStatus: "fully_paid",
+      },
+      {
+        id: "exp-2",
+        eventId: "ev-1",
+        categoryId: "cat-1",
+        title: "Bar Catering Retainer",
+        estimatedAmount: 5000,
+        actualAmount: 5000,
+        depositPaid: 2000, // partially paid deposit
+        dueDate: null,
+        paymentStatus: "deposit_paid",
+      },
+    ];
+
+    const result = BudgetService.calculate(15000, 50, categories, expenses);
+    expect(result.totalActual).toBe(7200);
+    // 2200 (fully paid) + 2000 (deposit) = 4200
+    expect(result.totalDepositsPaid).toBe(4200);
+    // 7200 - 4200 = 3000 outstanding balance left
+    expect(result.outstandingBalance).toBe(3000);
+  });
 });

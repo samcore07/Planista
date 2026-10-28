@@ -173,15 +173,19 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
         <Card className="border-border">
           <CardHeader className="pb-1.5 pt-4">
             <CardTitle className="text-xs font-medium text-muted-foreground">
-              Outstanding Payments
+              Outstanding Balance (Amount Left)
             </CardTitle>
           </CardHeader>
           <CardContent className="pb-4">
-            <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            <div
+              className={`text-xl sm:text-2xl font-bold tracking-tight ${
+                budgetMetrics.outstandingBalance > 0 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"
+              }`}
+            >
               ₹{budgetMetrics.outstandingBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              ₹{budgetMetrics.totalDepositsPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })} deposits paid
+              ₹{budgetMetrics.totalDepositsPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })} paid in deposits / full
             </p>
           </CardContent>
         </Card>
@@ -312,6 +316,7 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
                     <th className="py-2.5 px-3">Category</th>
                     <th className="py-2.5 px-3">Actual Amount</th>
                     <th className="py-2.5 px-3">Deposit Paid</th>
+                    <th className="py-2.5 px-3">Amount Left</th>
                     <th className="py-2.5 px-3">Due Date</th>
                     <th className="py-2.5 px-3">Payment Status</th>
                     <th className="py-2.5 px-3 text-right">Actions</th>
@@ -320,6 +325,11 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
                 <tbody className="divide-y divide-border">
                   {expenses.map((exp: ExpenseRow) => {
                     const deleteWithId = deleteExpenseAction.bind(null, eventId, exp.id);
+                    const actual = Number(exp.actual_amount);
+                    const isFullyPaid = exp.payment_status === "fully_paid";
+                    const depositPaid = isFullyPaid ? actual : Math.min(actual, Number(exp.deposit_paid || 0));
+                    const amountLeft = isFullyPaid ? 0 : Math.max(0, actual - depositPaid);
+
                     return (
                       <tr key={exp.id} className="hover:bg-secondary/20 transition-colors">
                         <td className="py-3 px-3">
@@ -334,10 +344,26 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
                           {exp.category_id ? categoryMap.get(exp.category_id) || "Category" : "Uncategorized"}
                         </td>
                         <td className="py-3 px-3 font-semibold text-foreground">
-                          ₹{Number(exp.actual_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          ₹{actual.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="py-3 px-3 text-muted-foreground">
-                          ₹{Number(exp.deposit_paid).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        <td className="py-3 px-3">
+                          <div className="font-medium text-foreground">
+                            ₹{depositPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                          </div>
+                          {isFullyPaid && (
+                            <div className="text-[10px] text-emerald-700 dark:text-emerald-400 font-medium">100% Paid</div>
+                          )}
+                        </td>
+                        <td className="py-3 px-3">
+                          {amountLeft <= 0 ? (
+                            <span className="font-semibold text-emerald-700 dark:text-emerald-400 inline-flex items-center gap-1">
+                              ₹0.00 <span className="text-[10px] font-normal text-muted-foreground">(Settled)</span>
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-amber-700 dark:text-amber-400">
+                              ₹{amountLeft.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 px-3 text-muted-foreground">
                           {exp.due_date ? (

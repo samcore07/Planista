@@ -23,6 +23,8 @@ export interface CategorySummary {
   allocatedAmount: number;
   estimatedAmount: number;
   actualAmount: number;
+  depositsPaid?: number;
+  outstandingBalance?: number;
   varianceAmount: number; // actual - allocated
   remainingAmount: number; // allocated - actual
   percentUtilized: number;
@@ -74,22 +76,25 @@ export class BudgetService {
     let totalDepositsPaid = 0;
 
     // Group expenses by category
-    const expenseMap = new Map<string, { estimated: number; actual: number }>();
+    const expenseMap = new Map<string, { estimated: number; actual: number; depositsPaid: number }>();
 
     for (const exp of expenses) {
       const est = Math.max(0, roundCurrency(exp.estimatedAmount));
       const act = Math.max(0, roundCurrency(exp.actualAmount));
-      const dep = Math.max(0, roundCurrency(exp.depositPaid));
+      // Reconcile deposit paid: if paymentStatus is fully_paid, full amount is paid at once
+      const isFullyPaid = exp.paymentStatus === "fully_paid";
+      const dep = isFullyPaid ? act : Math.min(act, Math.max(0, roundCurrency(exp.depositPaid)));
 
       totalEstimated = roundCurrency(totalEstimated + est);
       totalActual = roundCurrency(totalActual + act);
       totalDepositsPaid = roundCurrency(totalDepositsPaid + dep);
 
       const catId = exp.categoryId || "uncategorized";
-      const existing = expenseMap.get(catId) || { estimated: 0, actual: 0 };
+      const existing = expenseMap.get(catId) || { estimated: 0, actual: 0, depositsPaid: 0 };
       expenseMap.set(catId, {
         estimated: roundCurrency(existing.estimated + est),
         actual: roundCurrency(existing.actual + act),
+        depositsPaid: roundCurrency(existing.depositsPaid + dep),
       });
     }
 
@@ -100,10 +105,11 @@ export class BudgetService {
       const allocated = Math.max(0, roundCurrency(cat.allocatedAmount));
       totalAllocated = roundCurrency(totalAllocated + allocated);
 
-      const catExpenses = expenseMap.get(cat.id) || { estimated: 0, actual: 0 };
+      const catExpenses = expenseMap.get(cat.id) || { estimated: 0, actual: 0, depositsPaid: 0 };
       const variance = roundCurrency(catExpenses.actual - allocated);
       const remaining = roundCurrency(allocated - catExpenses.actual);
       const percent = allocated > 0 ? roundCurrency((catExpenses.actual / allocated) * 100) : 0;
+      const catOutstanding = roundCurrency(Math.max(0, catExpenses.actual - catExpenses.depositsPaid));
 
       categorySummaries.push({
         categoryId: cat.id,
@@ -111,6 +117,8 @@ export class BudgetService {
         allocatedAmount: allocated,
         estimatedAmount: catExpenses.estimated,
         actualAmount: catExpenses.actual,
+        depositsPaid: catExpenses.depositsPaid,
+        outstandingBalance: catOutstanding,
         varianceAmount: variance,
         remainingAmount: remaining,
         percentUtilized: percent,
@@ -123,12 +131,15 @@ export class BudgetService {
     // Handle any uncategorized expenses
     for (const [catId, uncatExp] of expenseMap.entries()) {
       if (uncatExp.actual > 0 || uncatExp.estimated > 0) {
+        const uncatOutstanding = roundCurrency(Math.max(0, uncatExp.actual - uncatExp.depositsPaid));
         categorySummaries.push({
           categoryId: catId === "uncategorized" ? null : catId,
           categoryName: "Uncategorized",
           allocatedAmount: 0,
           estimatedAmount: uncatExp.estimated,
           actualAmount: uncatExp.actual,
+          depositsPaid: uncatExp.depositsPaid,
+          outstandingBalance: uncatOutstanding,
           varianceAmount: uncatExp.actual,
           remainingAmount: -uncatExp.actual,
           percentUtilized: 100,
@@ -139,7 +150,7 @@ export class BudgetService {
 
     const remainingUnallocated = roundCurrency(safeTotalBudget - totalAllocated);
     const remainingUnspent = roundCurrency(safeTotalBudget - totalActual);
-    const outstandingBalance = roundCurrency(totalActual - totalDepositsPaid);
+    const outstandingBalance = roundCurrency(Math.max(0, totalActual - totalDepositsPaid));
     const isOverBudget = totalActual > safeTotalBudget;
     const overspendAmount = isOverBudget ? roundCurrency(totalActual - safeTotalBudget) : 0;
 

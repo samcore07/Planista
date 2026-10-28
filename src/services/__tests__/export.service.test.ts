@@ -113,9 +113,24 @@ describe("ExportService Unit Tests", () => {
   describe("CSV Generation", () => {
     it("generates well-formatted Budget CSV with headers and sanitized values", () => {
       const csv = ExportService.generateBudgetCsv(mockBundle);
-      expect(csv).toContain('"Category","Expense Title","Estimated Amount"');
-      expect(csv).toContain('"Catering","Three-Course Dinner Deposit","10000.00","9500.00"');
+      expect(csv).toContain('"Category","Expense Title","Estimated Amount","Actual Amount","Deposit Paid","Amount Left"');
+      expect(csv).toContain('"Catering","Three-Course Dinner Deposit","10000.00","9500.00","3000.00","6500.00"');
       expect(csv).toContain('"Includes vegetarian options"');
+    });
+
+    it("ensures fully_paid expenses in CSV output full deposit and zero amount left", () => {
+      const fullyPaidBundle: EventExportBundle = {
+        ...mockBundle,
+        expenses: [
+          {
+            ...mockBundle.expenses[0],
+            payment_status: "fully_paid",
+            deposit_paid: 0, // initially zero, should reconcile to full actual amount
+          },
+        ],
+      };
+      const csv = ExportService.generateBudgetCsv(fullyPaidBundle);
+      expect(csv).toContain('"Catering","Three-Course Dinner Deposit","10000.00","9500.00","9500.00","0.00"');
     });
 
     it("generates well-formatted Tasks CSV with run sheet timeline details", () => {
