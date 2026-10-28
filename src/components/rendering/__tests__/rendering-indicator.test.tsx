@@ -1,95 +1,110 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, act } from "@testing-library/react";
 import * as React from "react";
-import { RenderingIndicator, getRouteRenderingInfo } from "../rendering-indicator";
+import { RenderingIndicator, setRenderingState } from "../rendering-indicator";
 
-// Mock next/navigation
 let currentMockPathname = "/";
-const mockRefresh = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => currentMockPathname,
-  useRouter: () => ({
-    refresh: mockRefresh,
-  }),
 }));
 
-describe("getRouteRenderingInfo strategy mapping", () => {
-  it("classifies static auth pages as static (○)", () => {
-    const login = getRouteRenderingInfo("/auth/login");
-    expect(login.type).toBe("static");
-    expect(login.symbol).toBe("○");
-
-    const register = getRouteRenderingInfo("/auth/register");
-    expect(register.type).toBe("static");
-
-    const notFound = getRouteRenderingInfo("/_not-found");
-    expect(notFound.type).toBe("static");
-  });
-
-  it("classifies API and auth callback routes as dynamic (ƒ)", () => {
-    const callback = getRouteRenderingInfo("/auth/callback");
-    expect(callback.type).toBe("dynamic");
-    expect(callback.symbol).toBe("ƒ");
-
-    const api = getRouteRenderingInfo("/api/events/123/export");
-    expect(api.type).toBe("dynamic");
-    expect(api.symbol).toBe("ƒ");
-  });
-
-  it("classifies dashboard, events, timeline, and architect as partial prerendered (◐ PPR)", () => {
-    const home = getRouteRenderingInfo("/");
-    expect(home.type).toBe("ppr");
-    expect(home.symbol).toBe("◐");
-
-    const timeline = getRouteRenderingInfo("/events/evt-123/timeline");
-    expect(timeline.type).toBe("ppr");
-    expect(timeline.symbol).toBe("◐");
-
-    const architect = getRouteRenderingInfo("/events/architect");
-    expect(architect.type).toBe("ppr");
-  });
-});
-
-describe("RenderingIndicator Component UI", () => {
+describe("RenderingIndicator Component", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    currentMockPathname = "/events/evt-1/timeline";
+    vi.useFakeTimers();
+    currentMockPathname = "/";
   });
 
-  it("renders the floating rendering pill button with the correct route symbol", () => {
-    render(<RenderingIndicator />);
-    const button = screen.getByTestId("rendering-button");
-    expect(button).toBeDefined();
-    expect(button.textContent).toContain("◐");
-    expect(button.textContent).toContain("PPR");
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
-  it("toggles the route inspector popover on click", () => {
+  it("is hidden by default when no rendering or traversal is active", () => {
     render(<RenderingIndicator />);
-    const button = screen.getByTestId("rendering-button");
-
-    // Popover is closed initially
-    expect(screen.queryByTestId("rendering-popover")).toBeNull();
-
-    // Open popover
-    fireEvent.click(button);
-    expect(screen.getByTestId("rendering-popover")).toBeDefined();
-    expect(screen.getByTestId("rendering-pathname").textContent).toBe("/events/evt-1/timeline");
-    expect(screen.getByTestId("rendering-strategy-badge").textContent).toContain("PPR");
-
-    // Close popover on second click
-    fireEvent.click(button);
-    expect(screen.queryByTestId("rendering-popover")).toBeNull();
+    expect(screen.queryByTestId("rendering-indicator")).toBeNull();
   });
 
-  it("invokes router.refresh when the refresh button is clicked", () => {
-    render(<RenderingIndicator />);
-    const button = screen.getByTestId("rendering-button");
-    fireEvent.click(button);
+  it("displays 'Rendering...' when a link click navigates to a new page", () => {
+    render(
+      <div>
+        <RenderingIndicator />
+        <a href="/dashboard" data-testid="dashboard-link">
+          Go to Dashboard
+        </a>
+      </div>
+    );
 
-    const refreshButton = screen.getByTitle(/Re-render Server Components/i);
-    fireEvent.click(refreshButton);
-    expect(mockRefresh).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("rendering-indicator")).toBeNull();
+
+    const link = screen.getByTestId("dashboard-link");
+    act(() => {
+      link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+
+    const indicator = screen.getByTestId("rendering-indicator");
+    expect(indicator).toBeDefined();
+    expect(indicator.textContent).toContain("Rendering...");
+  });
+
+  it("displays 'Rendering...' on form submission (e.g. login/register)", () => {
+    render(
+      <div>
+        <RenderingIndicator />
+        <form data-testid="login-form">
+          <button type="submit" data-testid="login-btn">
+            Sign In
+          </button>
+        </form>
+      </div>
+    );
+
+    const form = screen.getByTestId("login-form");
+    act(() => {
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+
+    const indicator = screen.getByTestId("rendering-indicator");
+    expect(indicator).toBeDefined();
+    expect(indicator.textContent).toContain("Rendering...");
+  });
+
+  it("displays 'Rendering...' programmatically via setRenderingState and hides on route change", () => {
+    const { rerender } = render(<RenderingIndicator />);
+
+    expect(screen.queryByTestId("rendering-indicator")).toBeNull();
+
+    act(() => {
+      setRenderingState(true);
+    });
+
+    expect(screen.getByTestId("rendering-indicator")).toBeDefined();
+
+    // Route change happens
+    currentMockPathname = "/events/123";
+    rerender(<RenderingIndicator />);
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+
+    expect(screen.queryByTestId("rendering-indicator")).toBeNull();
+  });
+
+  it("auto-clears after safety timeout if traversal stalls", () => {
+    render(<RenderingIndicator />);
+
+    act(() => {
+      setRenderingState(true);
+    });
+
+    expect(screen.getByTestId("rendering-indicator")).toBeDefined();
+
+    // Advance beyond 8-second safety fallback
+    act(() => {
+      vi.advanceTimersByTime(8500);
+    });
+
+    expect(screen.queryByTestId("rendering-indicator")).toBeNull();
   });
 });
