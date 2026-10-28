@@ -4,32 +4,55 @@ import { env } from "@/config/env";
 import { type Database } from "@/types/database.types";
 
 /**
- * Fast-path helper to parse JWT expiry from Supabase auth cookies without a remote network call.
+ * Fast-path helper to parse JWT expiry and user data from Supabase auth cookies without a remote network call.
+ * Handles both single and chunked cookies (.0, .1, etc.) and base64 payloads.
  * Avoids blocking every navigation with a 500-900ms roundtrip when the token is already fresh.
  */
-function getAuthTokenPayload(request: NextRequest): { exp: number; sub: string } | null {
+function getAuthTokenPayload(request: NextRequest): { exp: number; sub: string; email?: string } | null {
   const allCookies = request.cookies.getAll();
+  const chunkGroups = new Map<string, Array<{ idx: number; value: string }>>();
+
   for (const c of allCookies) {
-    if (c.name.includes("-auth-token") || c.name.startsWith("sb-")) {
-      try {
-        let raw = c.value;
-        if (raw.startsWith("base64-")) {
-          raw = Buffer.from(raw.slice(7), "base64").toString("utf8");
-        }
-        const parsed = JSON.parse(raw);
-        const token = Array.isArray(parsed) ? parsed[0] : (parsed.access_token || parsed);
-        if (typeof token === "string" && token.includes(".")) {
-          const payloadPart = token.split(".")[1];
-          const payload = JSON.parse(Buffer.from(payloadPart, "base64").toString("utf8"));
-          if (payload && typeof payload.exp === "number" && typeof payload.sub === "string") {
-            return { exp: payload.exp, sub: payload.sub };
-          }
-        }
-      } catch {
-        // Chunked or non-standard format, fallback to standard client
-      }
+    if (!c.name.includes("-auth-token") && !c.name.startsWith("sb-")) {
+      continue;
+    }
+    const chunkMatch = c.name.match(/^(.*)\.(\d+)$/);
+    if (chunkMatch) {
+      const baseName = chunkMatch[1];
+      const idx = parseInt(chunkMatch[2], 10);
+      if (!chunkGroups.has(baseName)) chunkGroups.set(baseName, []);
+      chunkGroups.get(baseName)!.push({ idx, value: c.value });
+    } else {
+      if (!chunkGroups.has(c.name)) chunkGroups.set(c.name, []);
+      chunkGroups.get(c.name)!.push({ idx: 0, value: c.value });
     }
   }
+
+  for (const [, chunks] of chunkGroups) {
+    try {
+      chunks.sort((a, b) => a.idx - b.idx);
+      let combined = chunks.map((c) => c.value).join("");
+      if (combined.startsWith("base64-")) {
+        combined = Buffer.from(combined.slice(7), "base64").toString("utf8");
+      }
+      const parsed = JSON.parse(combined);
+      const token = Array.isArray(parsed) ? parsed[0] : (parsed.access_token || parsed);
+      if (typeof token === "string" && token.includes(".")) {
+        const parts = token.split(".");
+        if (parts.length >= 2) {
+          let b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+          while (b64.length % 4 !== 0) b64 += "=";
+          const payload = JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+          if (payload && typeof payload.exp === "number" && typeof payload.sub === "string") {
+            return { exp: payload.exp, sub: payload.sub, email: payload.email };
+          }
+        }
+      }
+    } catch {
+      // Chunked or non-standard format in this cookie group, check next candidate
+    }
+  }
+
   return null;
 }
 

@@ -68,25 +68,14 @@ export class EventsDAL {
   });
 
   /**
-   * Retrieves aggregated live dashboard statistics calculated from real database entities
+   * Retrieves aggregated live dashboard statistics calculated from real database entities.
+   * Memoized per-request to avoid redundant database calls.
    */
-  static async getUserDashboardMetrics(): Promise<EventDashboardSummary> {
+  static getUserDashboardMetrics = cache(async (): Promise<EventDashboardSummary> => {
     const user = await getAuthenticatedUser();
     if (!user) throw new Error("Unauthorized");
 
-    const supabase = await createClient();
-
-    // 1. Fetch user accessible events
-    const { data: eventsData, error: eventsError } = await supabase
-      .from("events")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (eventsError) {
-      throw new Error(`Failed to fetch events for dashboard: ${eventsError.message}`);
-    }
-
-    const events = eventsData || [];
+    const events = await EventsDAL.getEvents();
     if (events.length === 0) {
       return {
         events: [],
@@ -99,26 +88,27 @@ export class EventsDAL {
       };
     }
 
+    const supabase = await createClient();
     const eventIds = events.map((e) => e.id);
 
-    // 2. Fetch all expenses for these events
-    const { data: expensesData } = await supabase
-      .from("expenses")
-      .select("event_id, actual_amount")
-      .in("event_id", eventIds);
+    // 2. Fetch all expenses and tasks concurrently in parallel for minimum TTFB
+    const [{ data: expensesData }, { data: tasksData }] = await Promise.all([
+      supabase
+        .from("expenses")
+        .select("event_id, actual_amount")
+        .in("event_id", eventIds),
+      supabase
+        .from("timeline_tasks")
+        .select("id, event_id, title, due_date, priority, status")
+        .in("event_id", eventIds)
+        .order("due_date", { ascending: true, nullsFirst: false }),
+    ]);
 
     const expensesByEvent = new Map<string, number>();
     for (const exp of expensesData || []) {
       const current = expensesByEvent.get(exp.event_id) || 0;
       expensesByEvent.set(exp.event_id, Math.round((current + Number(exp.actual_amount || 0)) * 100) / 100);
     }
-
-    // 3. Fetch all tasks for these events
-    const { data: tasksData } = await supabase
-      .from("timeline_tasks")
-      .select("id, event_id, title, due_date, priority, status")
-      .in("event_id", eventIds)
-      .order("due_date", { ascending: true, nullsFirst: false });
 
     const tasksCountByEvent = new Map<string, { total: number; completed: number }>();
     const upcomingTasks: EventDashboardSummary["upcomingTasks"] = [];
@@ -179,7 +169,7 @@ export class EventsDAL {
       completedTasks,
       upcomingTasks: upcomingTasks.slice(0, 5),
     };
-  }
+  });
 
   /**
    * Retrieves a single event by ID with security verification.

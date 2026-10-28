@@ -24,6 +24,7 @@ import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { EventsDAL } from "@/lib/dal/events.dal";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import DashboardLoading from "./loading";
 
 async function DashboardContent() {
   await connection();
@@ -356,16 +357,7 @@ async function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="space-y-2 text-center">
-            <div className="h-8 w-8 rounded-md bg-primary mx-auto animate-pulse" />
-            <p className="text-xs text-muted-foreground">Loading workspace...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<DashboardLoading />}>
       <DashboardContent />
     </Suspense>
   );
