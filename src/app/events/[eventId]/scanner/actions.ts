@@ -21,6 +21,7 @@ export async function uploadDocumentAction(eventId: string, formData: FormData):
     redirect(`/events/${eventId}/scanner?error=${encodeURIComponent("Please select a document file to upload.")}`);
   }
 
+  let createdDocId: string | null = null;
   try {
     // 1. Validate upload restrictions
     DocumentsDAL.validateUpload(file.name, file.type, file.size);
@@ -52,8 +53,8 @@ export async function uploadDocumentAction(eventId: string, formData: FormData):
             suggestedCategory: manualCategory || aiExtracted.suggestedCategory,
           };
         }
-      } catch {
-        // Fall back to filename-based extraction
+      } catch (e) {
+        console.warn("[uploadDocumentAction] AI extraction fallback:", e);
       }
     }
 
@@ -79,11 +80,15 @@ export async function uploadDocumentAction(eventId: string, formData: FormData):
       throw new Error(`Failed to save document metadata: ${insertError?.message}`);
     }
 
-    revalidatePath(`/events/${eventId}/scanner`);
-    redirect(`/events/${eventId}/scanner?docId=${doc.id}`);
+    createdDocId = doc.id;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to process document";
     redirect(`/events/${eventId}/scanner?error=${encodeURIComponent(message)}`);
+  }
+
+  if (createdDocId) {
+    revalidatePath(`/events/${eventId}/scanner`);
+    redirect(`/events/${eventId}/scanner?docId=${createdDocId}`);
   }
 }
 
@@ -104,6 +109,7 @@ export async function confirmScannedExpenseAction(
   const paymentStatus = (formData.get("paymentStatus") as "unpaid" | "deposit_paid" | "fully_paid") || "unpaid";
   const notes = (formData.get("notes") as string) || "";
 
+  let saveSuccess = false;
   try {
     await DocumentsDAL.confirmAndPersistExpense(eventId, documentId, {
       title,
@@ -114,13 +120,16 @@ export async function confirmScannedExpenseAction(
       paymentStatus,
       notes,
     });
+    saveSuccess = true;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to confirm scanned expense";
+    redirect(`/events/${eventId}/scanner?docId=${documentId}&error=${encodeURIComponent(message)}`);
+  }
 
+  if (saveSuccess) {
     revalidatePath(`/events/${eventId}/scanner`);
     revalidatePath(`/events/${eventId}/budget`);
     revalidatePath(`/events/${eventId}`);
     redirect(`/events/${eventId}/budget?saved=true`);
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Failed to confirm scanned expense";
-    redirect(`/events/${eventId}/scanner?docId=${documentId}&error=${encodeURIComponent(message)}`);
   }
 }

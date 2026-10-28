@@ -77,7 +77,7 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
             {isGroqConfigured ? (
               <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 gap-1.5 py-1">
                 <Cpu className="h-3.5 w-3.5" />
-                AI Vision Active (Groq Llama 3.2)
+                AI Vision Active (Groq Qwen Vision)
               </Badge>
             ) : isOcrConfigured ? (
               <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 gap-1.5 py-1">

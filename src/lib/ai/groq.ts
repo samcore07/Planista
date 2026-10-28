@@ -841,6 +841,38 @@ Requirements:
   }
 
   /**
+   * Dynamically resolves the best available vision/multimodal model on the Groq account
+   */
+  static async resolveVisionModel(apiKey: string): Promise<string> {
+    const CANDIDATES = [
+      "qwen/qwen3.8-27b",
+      "meta-llama/llama-4-scout-17b-16e-instruct",
+      "meta-llama/llama-4-maverick-17b-128e-instruct",
+      "llama-3.2-11b-vision-preview",
+      "llama-3.2-90b-vision-preview",
+    ];
+
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/models", {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const ids: string[] = (json.data || []).map((m: { id: string }) => m.id);
+        for (const candidate of CANDIDATES) {
+          if (ids.includes(candidate)) {
+            console.log(`[GroqClient] Selected active vision model: "${candidate}"`);
+            return candidate;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[GroqClient] Could not fetch vision models:", err);
+    }
+    return "qwen/qwen3.8-27b";
+  }
+
+  /**
    * Extracts vendor name, amounts, and itemization from uploaded invoice/quote using Groq AI
    */
   static async extractDocumentVision(params: {
@@ -851,44 +883,34 @@ Requirements:
     const apiKey = this.getApiKey();
     if (!apiKey) return null;
 
+    const visionModel = await this.resolveVisionModel(apiKey);
+
     const systemPrompt = `You are Planista's Intelligent Document & Expense Extractor.
 Inspect the uploaded receipt, invoice, or vendor quote and extract all financial and operational fields into valid JSON:
 {
-  "vendorName": string,
-  "amount": number (total payable or quoted amount as a positive number),
-  "date": string (ISO YYYY-MM-DD or empty string),
-  "suggestedCategory": string ("Venue & Rentals" | "Catering & Bar" | "Photography & Video" | "Floral & Decor" | "Music & Entertainment" | "Stationery & Favors" | "Other"),
-  "documentType": "invoice" | "receipt" | "quote" | "contract",
-  "lineItems": string[] (array of itemized line items with amounts if visible),
-  "uncertainties": string[] (any ambiguous or unverified details)
+  "vendorName": string, // Name of the vendor / business issuing the document (e.g. "Culinary Delights Catering")
+  "amount": number, // Total amount payable or quoted as a positive number (e.g. 8534.00)
+  "date": string, // Date on the document in YYYY-MM-DD format (e.g. "2030-01-15")
+  "suggestedCategory": string, // One of: "Venue & Rentals", "Catering & Bar", "Photography & Video", "Floral & Decor", "Music & Entertainment", "Stationery & Favors", "Other"
+  "documentType": string, // "invoice", "receipt", "quote", or "contract"
+  "lineItems": string[], // Itemized descriptions and amounts (e.g. ["Appetizers: $1,500", "Main Course: $5,000", "Desserts: $800", "Tax: $584", "Service Charge: $500"])
+  "uncertainties": string[] // Only note genuine ambiguities. If fields are clearly legible, return empty array []
 }
 
 Rules:
-- Extract the exact numerical total from the document.
-- Never invent facts: if an amount or vendor name is unreadable, note it under uncertainties.
+- Read and extract the actual text, totals, and company name directly from the image.
+- Never return amount as 0 if a total or subtotal is legible on the image.
 - Return ONLY the JSON object.`;
 
     try {
-      // Check if account has a vision model
-      let requestBody: RecordUnknown;
-      let hasVision = false;
-
-      try {
-        const modelsRes = await fetch("https://api.groq.com/openai/v1/models", {
-          headers: { Authorization: `Bearer ${apiKey}` },
-        });
-        if (modelsRes.ok) {
-          const modelsJson = await modelsRes.json();
-          const ids: string[] = (modelsJson.data || []).map((m: { id: string }) => m.id);
-          hasVision = ids.some((id) => id.includes("vision"));
-        }
-      } catch {
-        hasVision = false;
-      }
-
-      if (hasVision) {
-        requestBody = {
-          model: "llama-3.2-11b-vision-preview",
+      const response = await fetch(GROQ_API_ENDPOINT, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: visionModel,
           messages: [
             {
               role: "user",
@@ -905,30 +927,7 @@ Rules:
           ],
           response_format: { type: "json_object" },
           temperature: 0.1,
-        };
-      } else {
-        const textModel = await this.resolveTextModel(apiKey);
-        requestBody = {
-          model: textModel,
-          messages: [
-            { role: "system", content: systemPrompt },
-            {
-              role: "user",
-              content: `Document Filename: ${params.fileName}\nDocument Type: ${params.mimeType}\nPlease infer vendor partner name, estimated amount, expense category, and line item structure.`,
-            },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.1,
-        };
-      }
-
-      const response = await fetch(GROQ_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
+        }),
       });
 
       if (!response.ok) {
@@ -944,7 +943,7 @@ Rules:
       const cleaned = cleanJsonString(content);
       const parsed = JSON.parse(cleaned);
       const normalized = normalizeDocumentExtraction(parsed, params.fileName);
-      console.log(`[GroqClient] Successfully extracted document: "${normalized.vendorName}" $${normalized.amount}`);
+      console.log(`[GroqClient] Successfully extracted document using ${visionModel}: "${normalized.vendorName}" $${normalized.amount}`);
       return normalized;
     } catch (err) {
       console.error("[GroqClient] extractDocumentVision exception:", err);
