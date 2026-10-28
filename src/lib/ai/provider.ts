@@ -87,6 +87,7 @@ export class DeterministicBlueprintEngine {
         priority: "critical" as const,
         category: "Venue",
         dependsOnTitles: [],
+        estimatedDurationHours: 4.0,
       },
       {
         title: "Tasting Session & Menu Selection",
@@ -95,6 +96,7 @@ export class DeterministicBlueprintEngine {
         priority: "high" as const,
         category: "Catering",
         dependsOnTitles: ["Finalize & Sign Venue Contract"],
+        estimatedDurationHours: 3.0,
       },
       {
         title: "Confirm Decor & Lighting Layout",
@@ -103,6 +105,7 @@ export class DeterministicBlueprintEngine {
         priority: "medium" as const,
         category: "Decor",
         dependsOnTitles: ["Finalize & Sign Venue Contract"],
+        estimatedDurationHours: 2.5,
       },
       {
         title: "Final Headcount & Seating Chart Confirmation",
@@ -111,6 +114,7 @@ export class DeterministicBlueprintEngine {
         priority: "high" as const,
         category: "Coordination",
         dependsOnTitles: ["Tasting Session & Menu Selection"],
+        estimatedDurationHours: 2.0,
       },
       {
         title: "Vendor Run-Sheet Distribution",
@@ -119,6 +123,7 @@ export class DeterministicBlueprintEngine {
         priority: "critical" as const,
         category: "Operations",
         dependsOnTitles: ["Final Headcount & Seating Chart Confirmation"],
+        estimatedDurationHours: 3.5,
       },
     ];
 

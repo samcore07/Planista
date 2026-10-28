@@ -24,7 +24,60 @@ export const taskBlueprintSchema = z.object({
   priority: z.enum(["low", "medium", "high", "critical"]),
   category: z.string(),
   dependsOnTitles: z.array(z.string()).default([]),
+  estimatedDurationHours: z.number().positive().optional().default(2),
 });
+
+/**
+ * Auto-recommends realistic process time (in hours) based on priority, category, and task title.
+ */
+export function recommendProcessHours(
+  priority: "low" | "medium" | "high" | "critical" = "medium",
+  category?: string,
+  title?: string
+): number {
+  const lowerTitle = (title || "").toLowerCase();
+  const lowerCat = (category || "").toLowerCase();
+
+  // Scope & Discipline specific duration heuristics
+  if (lowerTitle.includes("contract") || lowerTitle.includes("venue") || lowerCat.includes("venue")) {
+    return 4.0;
+  }
+  if (lowerTitle.includes("tasting") || lowerTitle.includes("menu") || lowerCat.includes("catering") || lowerCat.includes("bar")) {
+    return 3.0;
+  }
+  if (
+    lowerTitle.includes("run-sheet") ||
+    lowerTitle.includes("run of show") ||
+    lowerTitle.includes("coordination") ||
+    lowerTitle.includes("delivery schedule") ||
+    lowerCat.includes("operations")
+  ) {
+    return 3.5;
+  }
+  if (lowerTitle.includes("decor") || lowerTitle.includes("lighting") || lowerTitle.includes("floral") || lowerCat.includes("decor")) {
+    return 2.5;
+  }
+  if (lowerTitle.includes("headcount") || lowerTitle.includes("seating") || lowerTitle.includes("rsvp") || lowerCat.includes("guest")) {
+    return 2.0;
+  }
+  if (lowerTitle.includes("budget") || lowerTitle.includes("finance") || lowerTitle.includes("payment")) {
+    return 2.0;
+  }
+
+  // Priority-based baseline
+  switch (priority) {
+    case "critical":
+      return 3.5;
+    case "high":
+      return 2.5;
+    case "medium":
+      return 2.0;
+    case "low":
+      return 1.0;
+    default:
+      return 2.0;
+  }
+}
 
 export const vendorRequirementBlueprintSchema = z.object({
   category: z.string(),

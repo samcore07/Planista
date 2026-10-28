@@ -25,6 +25,13 @@ describe("AI Event Architect", () => {
       expect(parsed.data.tasks.length).toBeGreaterThan(0);
       expect(parsed.data.theme.palette.length).toBeGreaterThan(0);
       expect(parsed.data.contingencies.length).toBeGreaterThan(0);
+
+      // Verify auto-recommended process hours are present on all generated tasks
+      for (const task of parsed.data.tasks) {
+        expect(task.estimatedDurationHours).toBeDefined();
+        expect(typeof task.estimatedDurationHours).toBe("number");
+        expect(task.estimatedDurationHours).toBeGreaterThan(0);
+      }
     }
   });
 

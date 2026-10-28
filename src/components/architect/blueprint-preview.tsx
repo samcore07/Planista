@@ -17,6 +17,7 @@ import {
   Trash2,
   X,
   RotateCcw,
+  Clock,
 } from "lucide-react";
 import {
   EventBlueprint,
@@ -24,6 +25,7 @@ import {
   TaskBlueprint,
   ContingencyBlueprint,
   ThemeBlueprint,
+  recommendProcessHours,
 } from "@/types/blueprint.types";
 import { BlueprintGenerationInput } from "@/lib/ai/provider";
 import { persistAcceptedBlueprintAction } from "@/app/events/architect/actions";
@@ -102,6 +104,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
       priority: "medium",
       category: "Planning",
       dependsOnTitles: [],
+      estimatedDurationHours: 2.0,
     },
   });
 
@@ -273,16 +276,21 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
         priority: "medium",
         category: "Planning",
         dependsOnTitles: [],
+        estimatedDurationHours: 2.0,
       },
     });
   };
 
   const openEditTaskModal = (index: number) => {
+    const task = blueprint.tasks[index];
     setTaskModal({
       isOpen: true,
       mode: "edit",
       index,
-      data: { ...blueprint.tasks[index] },
+      data: {
+        ...task,
+        estimatedDurationHours: task.estimatedDurationHours ?? 2.0,
+      },
     });
   };
 
@@ -712,6 +720,12 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {blueprint.tasks.length > 0 && (
+                <Badge variant="outline" className="text-xs gap-1 border-emerald-500/30 text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 font-normal">
+                  <Clock className="w-3 h-3" />
+                  {blueprint.tasks.reduce((sum, t) => sum + (Number(t.estimatedDurationHours) || 2), 0)} hrs total
+                </Badge>
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -757,7 +771,11 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                    <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+                      <span className="inline-flex items-center gap-1 font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded text-[11px]" title="Auto-recommended process time">
+                        <Clock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                        {t.estimatedDurationHours ?? 2} {Number(t.estimatedDurationHours ?? 2) === 1 ? "hr" : "hrs"}
+                      </span>
                       <span className="text-[11px] text-muted-foreground font-mono">
                         T-{t.relativeDaysBeforeEvent} days
                       </span>
@@ -1223,21 +1241,24 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="tsk-priority" className="text-xs">Priority</Label>
                   <select
                     id="tsk-priority"
                     value={taskModal.data.priority}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const newPriority = e.target.value as TaskBlueprint["priority"];
+                      const recHours = recommendProcessHours(newPriority, taskModal.data.category, taskModal.data.title);
                       setTaskModal((prev) => ({
                         ...prev,
                         data: {
                           ...prev.data,
-                          priority: e.target.value as TaskBlueprint["priority"],
+                          priority: newPriority,
+                          estimatedDurationHours: recHours,
                         },
-                      }))
-                    }
+                      }));
+                    }}
                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus:ring-1 focus:ring-primary"
                   >
                     <option value="low">Low</option>
@@ -1247,7 +1268,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="tsk-days" className="text-xs">Days Before Event (T-X)</Label>
+                  <Label htmlFor="tsk-days" className="text-xs">Days Before (T-X)</Label>
                   <Input
                     id="tsk-days"
                     type="number"
@@ -1262,6 +1283,49 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                     }
                     required
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="tsk-duration" className="text-xs flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      Process Hours
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const rec = recommendProcessHours(taskModal.data.priority, taskModal.data.category, taskModal.data.title);
+                        setTaskModal((prev) => ({
+                          ...prev,
+                          data: { ...prev.data, estimatedDurationHours: rec },
+                        }));
+                      }}
+                      className="text-[10px] text-primary hover:underline cursor-pointer"
+                      title="Auto recommend based on task details and priority"
+                    >
+                      Auto
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id="tsk-duration"
+                      type="number"
+                      step="0.5"
+                      min="0.5"
+                      max="100"
+                      value={taskModal.data.estimatedDurationHours ?? 2}
+                      onChange={(e) =>
+                        setTaskModal((prev) => ({
+                          ...prev,
+                          data: { ...prev.data, estimatedDurationHours: Number(e.target.value) || 0.5 },
+                        }))
+                      }
+                      className="pr-8"
+                      required
+                    />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium pointer-events-none">
+                      hrs
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2 border-t border-border">

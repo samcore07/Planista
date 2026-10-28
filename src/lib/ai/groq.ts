@@ -2,10 +2,13 @@ import { env } from "@/config/env";
 import {
   eventBlueprintSchema,
   EventBlueprint,
+  recommendProcessHours,
 } from "@/types/blueprint.types";
 import { BlueprintGenerationInput, CopilotActionProposal } from "@/lib/ai/provider";
 import { ThemeConceptInput, themeConceptInputSchema } from "@/lib/dal/theme.dal";
 import { ExtractedDocumentData } from "@/lib/dal/documents.dal";
+
+export { recommendProcessHours };
 
 const GROQ_API_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
@@ -177,10 +180,10 @@ export function normalizeBlueprintOutput(raw: unknown, input: BlueprintGeneratio
   }
 
   const tasks = (rawTasks.length > 0 ? rawTasks : [
-    { title: "Confirm venue contract & deposit", description: "Lock down location dates and operational guidelines", relativeDaysBeforeEvent: 180, priority: "critical", category: "Venue & Rentals" },
-    { title: "Retain key catering and bar partner", description: "Conduct menu tasting and finalize staffing headcounts", relativeDaysBeforeEvent: 120, priority: "high", category: "Catering & Bar" },
-    { title: "Review decor and spatial floorplan", description: "Align lighting, florals, and seating arrangement", relativeDaysBeforeEvent: 60, priority: "medium", category: "Floral & Decor" },
-    { title: "Finalize run of show & vendor delivery schedule", description: "Distribute master schedule to all operational partners", relativeDaysBeforeEvent: 14, priority: "critical", category: "General Production" },
+    { title: "Confirm venue contract & deposit", description: "Lock down location dates and operational guidelines", relativeDaysBeforeEvent: 180, priority: "critical", category: "Venue & Rentals", estimatedDurationHours: 4.0 },
+    { title: "Retain key catering and bar partner", description: "Conduct menu tasting and finalize staffing headcounts", relativeDaysBeforeEvent: 120, priority: "high", category: "Catering & Bar", estimatedDurationHours: 3.0 },
+    { title: "Review decor and spatial floorplan", description: "Align lighting, florals, and seating arrangement", relativeDaysBeforeEvent: 60, priority: "medium", category: "Floral & Decor", estimatedDurationHours: 2.5 },
+    { title: "Finalize run of show & vendor delivery schedule", description: "Distribute master schedule to all operational partners", relativeDaysBeforeEvent: 14, priority: "critical", category: "General Production", estimatedDurationHours: 3.5 },
   ]).map((item: unknown) => {
     const t = toRecord(item);
     const rawPriority = String(t.priority || "medium").toLowerCase().trim();
@@ -196,13 +199,21 @@ export function normalizeBlueprintOutput(raw: unknown, input: BlueprintGeneratio
     const rawDays = Number(String(t.relativeDaysBeforeEvent || t.daysBeforeEvent || 30).replace(/[^0-9-]/g, "")) || 30;
     const relativeDaysBeforeEvent = Math.abs(Math.round(rawDays));
 
+    const title = String(t.title || "Checklist Task").trim();
+    const description = String(t.description || "").trim();
+    const category = String(t.category || "General").trim();
+
+    const rawHours = Number(String(t.estimatedDurationHours ?? t.estimated_duration_hours ?? t.processHours ?? t.durationHours ?? 0).replace(/[^0-9.]/g, "")) || 0;
+    const estimatedDurationHours = rawHours > 0 ? Math.round(rawHours * 10) / 10 : recommendProcessHours(priority, category, title);
+
     return {
-      title: String(t.title || "Checklist Task").trim(),
-      description: String(t.description || "").trim(),
+      title,
+      description,
       relativeDaysBeforeEvent,
       priority,
-      category: String(t.category || "General").trim(),
+      category,
       dependsOnTitles: Array.isArray(t.dependsOnTitles) ? t.dependsOnTitles.map(String) : Array.isArray(t.dependencies) ? t.dependencies.map(String) : [],
+      estimatedDurationHours,
     };
   });
 
@@ -581,7 +592,8 @@ The blueprint MUST be valid JSON adhering strictly to this schema:
       "relativeDaysBeforeEvent": number (positive integer, e.g. 180 means T-180 days before event),
       "priority": "low" | "medium" | "high" | "critical",
       "category": string,
-      "dependsOnTitles": string[]
+      "dependsOnTitles": string[],
+      "estimatedDurationHours": number (realistic process time in hours, e.g. 1.5, 2.0, 3.5, 4.0)
     }
   ],
   "vendorRequirements": [
@@ -614,7 +626,7 @@ The blueprint MUST be valid JSON adhering strictly to this schema:
 CRITICAL RULES:
 1. The sum of all suggestedAmount in budgetAllocations MUST NOT exceed the total budget of ${input.currency} ${input.totalBudget}. The percentages must add up to 100%.
 2. Provide 5 to 7 balanced budget categories.
-3. Provide 6 to 10 chronologically organized milestone checklist tasks with realistic T-X day values and logical dependencies.
+3. Provide 6 to 10 chronologically organized milestone checklist tasks with realistic T-X day values, auto-recommended process hours (estimatedDurationHours), and logical dependencies.
 4. Provide a gorgeous 4-to-5 swatch color palette with real hex codes.
 5. Provide 3 to 5 actionable contingencies with clear mitigation steps.
 6. Return ONLY the JSON object. Do not include markdown ticks, conversational text, or explanation outside the JSON.`;

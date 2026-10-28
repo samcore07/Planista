@@ -120,6 +120,7 @@ export async function persistAcceptedBlueprintAction(
             priority: t.priority,
             status: "pending",
             category: t.category,
+            estimated_duration_hours: t.estimatedDurationHours ?? 2.0,
           })
           .select("id, title")
           .single();

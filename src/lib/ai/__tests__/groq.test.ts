@@ -7,6 +7,7 @@ import {
   normalizeThemeOutput,
   normalizeCopilotOutput,
   normalizeDocumentExtraction,
+  recommendProcessHours,
 } from "@/lib/ai/groq";
 import { eventBlueprintSchema } from "@/types/blueprint.types";
 import { themeConceptInputSchema } from "@/lib/dal/theme.dal";
@@ -86,6 +87,14 @@ describe("Groq LLM Response Normalizers & Sanitization", () => {
     expect(sanitizeHexColor("invalid-color", "#112233")).toBe("#112233");
   });
 
+  it("recommendProcessHours yields realistic process time recommendations based on discipline and priority", () => {
+    expect(recommendProcessHours("critical", "Venue", "Confirm Venue Contract")).toBe(4.0);
+    expect(recommendProcessHours("high", "Catering", "Menu Tasting Session")).toBe(3.0);
+    expect(recommendProcessHours("critical", "Operations", "Distribute Run-Sheet")).toBe(3.5);
+    expect(recommendProcessHours("medium", "Decor", "Review Floral Layout")).toBe(2.5);
+    expect(recommendProcessHours("low", "General", "Review checklist")).toBe(1.0);
+  });
+
   it("normalizeBlueprintOutput normalizes and satisfies eventBlueprintSchema even with string numbers and loose fields", () => {
     const rawLLM = {
       overview: {
@@ -151,6 +160,7 @@ describe("Groq LLM Response Normalizers & Sanitization", () => {
       expect(validated.data.overview.suggestedTimelineMonths).toBe(9);
       expect(validated.data.tasks[0].priority).toBe("critical");
       expect(validated.data.tasks[0].relativeDaysBeforeEvent).toBe(180);
+      expect(validated.data.tasks[0].estimatedDurationHours).toBe(4.0); // Venue contract heuristic auto-recommends 4.0h
       expect(validated.data.vendorRequirements[0].estimatedCostRange.min).toBe(8000);
       expect(validated.data.vendorRequirements[0].estimatedCostRange.max).toBe(12000);
       expect(validated.data.theme.palette[0].hex).toBe("#121829");
