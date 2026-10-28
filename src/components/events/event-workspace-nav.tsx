@@ -10,6 +10,7 @@ import {
   Palette,
   FileSearch,
   Download,
+  Workflow,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,12 @@ export function EventWorkspaceNav({ eventId }: WorkspaceNavProps) {
       href: `/events/${eventId}/export`,
       exact: false,
       icon: Download,
+    },
+    {
+      name: "Logistics",
+      href: `/events/${eventId}/logistics`,
+      exact: false,
+      icon: Workflow,
     },
     {
       name: "Settings",

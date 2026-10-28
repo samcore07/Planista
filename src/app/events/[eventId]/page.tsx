@@ -12,6 +12,7 @@ import {
   Palette,
   FileSearch,
   Download,
+  Workflow,
   Settings,
   Clock,
 } from "lucide-react";
@@ -374,6 +375,24 @@ async function EventOverviewContent({ params }: EventPageProps) {
             </h3>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
               Generate cohesive event briefs, run sheets, printable schedules, and budget CSVs.
+            </p>
+          </Link>
+
+          <Link
+            href={`/events/${eventId}/logistics`}
+            className="group p-5 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="h-8 w-8 rounded-md bg-secondary flex items-center justify-center text-primary">
+                <Workflow className="h-4 w-4" />
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+            </div>
+            <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
+              Logistics & Critical Path
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+              Interactive CPM dependency graph, live readiness score, critical slack float, and resource heatmaps.
             </p>
           </Link>
         </div>
