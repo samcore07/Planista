@@ -135,6 +135,10 @@ export function TutorialVideo() {
           "*"
         );
         iframeRef.current.contentWindow?.postMessage(
+          JSON.stringify({ event: "command", func: "setPlaybackQuality", args: ["hd1080"] }),
+          "*"
+        );
+        iframeRef.current.contentWindow?.postMessage(
           JSON.stringify({ event: "command", func: "playVideo", args: "" }),
           "*"
         );
@@ -151,7 +155,7 @@ export function TutorialVideo() {
     }
   };
 
-  const embedUrl = `https://www.youtube-nocookie.com/embed/nCGiojMqvQI?autoplay=1&start=${activeSeconds}&rel=0&modestbranding=1&enablejsapi=1`;
+  const embedUrl = `https://www.youtube-nocookie.com/embed/nCGiojMqvQI?autoplay=1&vq=hd1080&start=${activeSeconds}&rel=0&modestbranding=1&enablejsapi=1`;
 
   return (
     <div className="space-y-6">
@@ -197,6 +201,16 @@ export function TutorialVideo() {
               title="Planista Product Tutorial & Walkthrough"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
+              onLoad={() => {
+                try {
+                  iframeRef.current?.contentWindow?.postMessage(
+                    JSON.stringify({ event: "command", func: "setPlaybackQuality", args: ["hd1080"] }),
+                    "*"
+                  );
+                } catch {
+                  // Ignore
+                }
+              }}
             />
           )}
         </div>
