@@ -94,17 +94,16 @@ export async function toggleTaskStatusAction(
   eventId: string,
   taskId: string,
   newStatus: "pending" | "in_progress" | "completed" | "blocked"
-): Promise<void> {
+): Promise<{ success: boolean; error?: string }> {
   try {
     await TasksDAL.updateTask(taskId, { status: newStatus });
     await EventOrchestratorService.recalculateEventState(eventId);
+    revalidatePath(`/events/${eventId}/timeline`);
+    return { success: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to update task status";
-    redirect(`/events/${eventId}/timeline?error=${encodeURIComponent(message)}`);
+    return { success: false, error: message };
   }
-
-  revalidatePath(`/events/${eventId}/timeline`);
-  redirect(`/events/${eventId}/timeline`);
 }
 
 export async function deleteTaskAction(eventId: string, taskId: string): Promise<void> {
