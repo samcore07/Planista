@@ -11,7 +11,8 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { EventsDAL } from "@/lib/dal/events.dal";
-import { ThemeDAL, ThemeRow } from "@/lib/dal/theme.dal";
+import { ThemeDAL, ThemeRow, ThemeConceptInput } from "@/lib/dal/theme.dal";
+import { GroqClient } from "@/lib/ai/groq";
 import {
   selectThemeAction,
   createOrRefineThemeAction,
@@ -38,9 +39,22 @@ async function ThemeStudioContent({ params, searchParams }: ThemePageProps) {
 
   let themes = await ThemeDAL.getThemes(eventId);
 
-  // If no themes exist yet, bootstrap one default concept for the user
+  // If no themes exist yet, bootstrap one concept for the user
   if (themes.length === 0) {
-    const initial = ThemeDAL.generateCuratedConcept("Warm Editorial Botanical", event.event_type);
+    let initial: ThemeConceptInput | null = null;
+    if (GroqClient.isConfigured()) {
+      try {
+        initial = await GroqClient.generateTheme(
+          `${event.title || "Atmospheric"} aesthetic design concept`,
+          event.event_type
+        );
+      } catch {
+        // Fall back to curated concept
+      }
+    }
+    if (!initial) {
+      initial = ThemeDAL.generateCuratedConcept("Warm Editorial Botanical", event.event_type);
+    }
     initial.isSelected = true;
     const created = await ThemeDAL.createTheme(eventId, initial);
     themes = [created];
