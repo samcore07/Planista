@@ -174,6 +174,29 @@ export default function Home() {
     },
   ];
 
+  const tutorialChapters = [
+    {
+      time: "00:00 - 01:15",
+      title: "AI Architect Intake",
+      desc: "Generating structured Zod blueprints from natural language inputs.",
+    },
+    {
+      time: "01:15 - 02:30",
+      title: "Live Budget & OCR",
+      desc: "Uploading receipt quotes with automated discrepancy detection.",
+    },
+    {
+      time: "02:30 - 03:45",
+      title: "CPM Logistics & Graph",
+      desc: "Interactive dependency flowcharts and slack float analysis.",
+    },
+    {
+      time: "03:45 - 05:00",
+      title: "Event Pack Export",
+      desc: "Compiling verified run sheets, printable briefs, and ledger CSVs.",
+    },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-background selection:bg-accent selection:text-accent-foreground">
       {/* Header / Navigation */}
@@ -361,15 +384,21 @@ export default function Home() {
               {architecturePillars.map((pillar, idx) => {
                 const Icon = pillar.icon;
                 return (
-                  <Card key={idx} className="border-border/80 bg-card hover:shadow-sm transition-all">
-                    <CardHeader className="space-y-2 pb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
+                  <Card key={idx} className="group border-border/80 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-300">
+                    <CardHeader className="space-y-3 pb-4">
+                      <div className="flex items-start gap-3.5">
+                        <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary group-hover:scale-105 transition-transform shadow-xs shrink-0 mt-0.5">
                           <Icon className="h-5 w-5" />
                         </div>
-                        <div>
-                          <CardTitle className="text-lg font-semibold">{pillar.title}</CardTitle>
-                          <p className="text-xs font-medium text-primary mt-0.5">{pillar.tagline}</p>
+                        <div className="space-y-2 flex-1">
+                          <CardTitle className="text-lg font-semibold tracking-tight">{pillar.title}</CardTitle>
+                          {/* Visual, professional architectural tagline badge */}
+                          <div>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 dark:bg-emerald-950/50 border border-emerald-500/25 dark:border-emerald-500/35 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono font-semibold tracking-tight shadow-xs">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+                              <span>{pillar.tagline}</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </CardHeader>
@@ -478,11 +507,25 @@ export default function Home() {
                 return (
                   <div
                     key={idx}
-                    className="relative flex flex-col md:flex-row items-start gap-6 p-6 rounded-xl border border-border/80 bg-card hover:border-primary/40 transition-all shadow-sm"
+                    className="group relative flex flex-col md:flex-row items-start gap-6 p-6 sm:p-7 rounded-2xl border border-border/80 bg-card/90 hover:bg-card hover:border-primary/50 hover:shadow-lg transition-all duration-300"
                   >
-                    {/* Step indicator badge */}
-                    <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-secondary shrink-0 font-serif font-bold text-lg text-primary border border-border/80">
-                      {wf.step}
+                    {/* Visual, professional step indicator badge */}
+                    <div className="flex flex-col items-center justify-center h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-gradient-to-br from-card via-secondary/70 to-secondary/30 shrink-0 border border-border/90 shadow-sm relative overflow-hidden group-hover:border-primary/50 group-hover:shadow-md group-hover:shadow-primary/5 transition-all duration-300">
+                      {/* Top subtle glow bar */}
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/40 to-transparent group-hover:via-primary transition-all duration-300" />
+                      
+                      {/* Micro phase label */}
+                      <span className="text-[9px] font-mono tracking-widest uppercase font-semibold text-muted-foreground/80">
+                        PHASE
+                      </span>
+                      {/* Stylized high-contrast numeral */}
+                      <span className="font-mono text-xl sm:text-2xl font-black tracking-tight text-foreground dark:text-emerald-300 group-hover:text-primary transition-colors leading-none my-0.5">
+                        {wf.step}
+                      </span>
+                      {/* Bottom indicator pip */}
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="h-1 w-3 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
+                      </div>
                     </div>
 
                     <div className="flex-1 space-y-2">
@@ -550,30 +593,31 @@ export default function Home() {
               </div>
 
               {/* Timestamp / Chapter Highlights */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-                <div className="p-3.5 rounded-xl border border-border/70 bg-card/80 text-left space-y-1 hover:border-primary/40 transition-colors shadow-xs">
-                  <span className="font-mono text-[10px] font-bold text-primary block">00:00 - 01:15</span>
-                  <h4 className="text-xs font-semibold text-foreground">AI Architect Intake</h4>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2">Generating structured Zod blueprints from natural language inputs.</p>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
+                {tutorialChapters.map((ch, idx) => (
+                  <div
+                    key={idx}
+                    className="group relative p-4 rounded-xl border border-border/80 bg-card/90 hover:bg-card hover:border-primary/50 transition-all duration-300 hover:shadow-md text-left space-y-2.5 overflow-hidden"
+                  >
+                    {/* Top ambient hover gradient glow */}
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-transparent group-hover:bg-gradient-to-r group-hover:from-primary/40 group-hover:via-emerald-400 group-hover:to-primary/40 transition-all duration-300" />
+                    
+                    {/* Visual, professional timestamp badge */}
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 dark:bg-emerald-950/40 border border-primary/20 dark:border-emerald-500/30 text-primary dark:text-emerald-300 text-[10px] font-mono font-semibold tracking-tight shadow-xs transition-colors group-hover:bg-primary/20 group-hover:border-primary/40">
+                      <PlayCircle className="h-3 w-3 shrink-0 text-primary dark:text-emerald-400 transition-transform group-hover:scale-110" />
+                      <span>{ch.time}</span>
+                    </div>
 
-                <div className="p-3.5 rounded-xl border border-border/70 bg-card/80 text-left space-y-1 hover:border-primary/40 transition-colors shadow-xs">
-                  <span className="font-mono text-[10px] font-bold text-primary block">01:15 - 02:30</span>
-                  <h4 className="text-xs font-semibold text-foreground">Live Budget & OCR</h4>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2">Uploading receipt quotes with automated discrepancy detection.</p>
-                </div>
+                    <h4 className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors flex items-center justify-between">
+                      <span>{ch.title}</span>
+                      <ArrowRight className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary shrink-0" />
+                    </h4>
 
-                <div className="p-3.5 rounded-xl border border-border/70 bg-card/80 text-left space-y-1 hover:border-primary/40 transition-colors shadow-xs">
-                  <span className="font-mono text-[10px] font-bold text-primary block">02:30 - 03:45</span>
-                  <h4 className="text-xs font-semibold text-foreground">CPM Logistics & Graph</h4>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2">Interactive dependency flowcharts and slack float analysis.</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-border/70 bg-card/80 text-left space-y-1 hover:border-primary/40 transition-colors shadow-xs">
-                  <span className="font-mono text-[10px] font-bold text-primary block">03:45 - 05:00</span>
-                  <h4 className="text-xs font-semibold text-foreground">Event Pack Export</h4>
-                  <p className="text-[11px] text-muted-foreground line-clamp-2">Compiling verified run sheets, printable briefs, and ledger CSVs.</p>
-                </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                      {ch.desc}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
