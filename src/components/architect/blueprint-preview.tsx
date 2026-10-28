@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface BlueprintPreviewProps {
   blueprint: EventBlueprint;
@@ -150,7 +151,26 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
     setBlueprint(initialBlueprint);
   };
 
+  // --- Handlers: Budget ---
+  const totalTargetBudget = Number(input.totalBudget || 0);
+  const totalAllocated = blueprint.budgetAllocations.reduce(
+    (sum, b) => sum + Number(b.suggestedAmount || 0),
+    0
+  );
+  const totalAllocatedPercent =
+    totalTargetBudget > 0 ? Math.round((totalAllocated / totalTargetBudget) * 100) : 0;
+  const isBudgetOver = totalTargetBudget > 0 && totalAllocated > totalTargetBudget;
+  const overAmount = Math.max(0, totalAllocated - totalTargetBudget);
+  const isSaveBlockedByBudget = selectedSections.budget && isBudgetOver;
+
   const handlePersist = async () => {
+    if (isSaveBlockedByBudget) {
+      setError(
+        `Cannot save blueprint: Total budget allocations ($${totalAllocated.toLocaleString()}) exceed target budget of $${totalTargetBudget.toLocaleString()} by $${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Please adjust category amounts to be within 100% before saving.`
+      );
+      return;
+    }
+
     setIsPersisting(true);
     setError(null);
 
@@ -182,15 +202,6 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
     }));
     setEditingOverview(false);
   };
-
-  // --- Handlers: Budget ---
-  const totalTargetBudget = Number(input.totalBudget || 0);
-  const totalAllocated = blueprint.budgetAllocations.reduce(
-    (sum, b) => sum + Number(b.suggestedAmount || 0),
-    0
-  );
-  const totalAllocatedPercent =
-    totalTargetBudget > 0 ? Math.round((totalAllocated / totalTargetBudget) * 100) : 0;
 
   const openAddBudgetModal = () => {
     setBudgetModal({
@@ -473,8 +484,16 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
             <Button
               size="sm"
               onClick={handlePersist}
-              disabled={isPersisting}
-              className="gap-1.5 text-xs shadow-sm"
+              disabled={isPersisting || isSaveBlockedByBudget}
+              className={cn(
+                "gap-1.5 text-xs shadow-sm transition-all",
+                isSaveBlockedByBudget && "opacity-60 cursor-not-allowed"
+              )}
+              title={
+                isSaveBlockedByBudget
+                  ? `Allocations exceed budget by $${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Reduce amounts to proceed.`
+                  : undefined
+              }
             >
               {isPersisting ? (
                 <>
@@ -550,7 +569,16 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
         </div>
 
         {/* 1. Budget Categories */}
-        <Card className={`transition-all ${selectedSections.budget ? "border-primary/50" : "opacity-60 border-border"}`}>
+        <Card
+          className={cn(
+            "transition-all",
+            isBudgetOver && selectedSections.budget
+              ? "border-destructive/60 bg-destructive/5"
+              : selectedSections.budget
+              ? "border-primary/50"
+              : "opacity-60 border-border"
+          )}
+        >
           <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-3">
             <div className="flex items-center gap-2">
               <input
@@ -565,8 +593,25 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                   <DollarSign className="h-4 w-4 text-primary" />
                   Budget Categories ({blueprint.budgetAllocations.length})
                 </CardTitle>
-                <CardDescription className="text-xs">
-                  Allocates {totalAllocatedPercent}% (${totalAllocated.toLocaleString()}) of the {input.currency} {totalTargetBudget.toLocaleString()} target
+                <CardDescription
+                  className={cn(
+                    "text-xs transition-colors",
+                    isBudgetOver
+                      ? "text-destructive font-semibold flex items-center gap-1.5"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {isBudgetOver && (
+                    <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                  )}
+                  <span>
+                    Allocates {totalAllocatedPercent}% (${totalAllocated.toLocaleString()}) of the {input.currency} {totalTargetBudget.toLocaleString()} target
+                    {isBudgetOver && (
+                      <span className="font-bold ml-1">
+                        — Exceeds target by ${overAmount.toLocaleString()} ({totalAllocatedPercent - 100}%)
+                      </span>
+                    )}
+                  </span>
                 </CardDescription>
               </div>
             </div>
@@ -581,12 +626,28 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                 <Plus className="h-3.5 w-3.5" />
                 Add Category
               </Button>
+              {isBudgetOver && selectedSections.budget && (
+                <Badge variant="destructive" className="text-xs animate-pulse">
+                  Exceeds 100%
+                </Badge>
+              )}
               <Badge variant="secondary" className="text-xs">
                 {selectedSections.budget ? "Accepted" : "Excluded"}
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
+            {isBudgetOver && selectedSections.budget && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-2.5 mb-3.5 flex items-start gap-2 text-xs text-destructive">
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div className="space-y-0.5">
+                  <span className="font-semibold">Budget allocations exceed 100% target:</span>
+                  <p className="text-[11px] leading-relaxed">
+                    Total allocated is ${totalAllocated.toLocaleString()} ({totalAllocatedPercent}%), which exceeds the {input.currency} {totalTargetBudget.toLocaleString()} target by ${overAmount.toLocaleString()}. You must reduce or remove category allocations to 100% or less before you can save and proceed.
+                  </p>
+                </div>
+              </div>
+            )}
             {blueprint.budgetAllocations.length === 0 ? (
               <div className="p-6 text-center text-xs text-muted-foreground border border-dashed rounded-md">
                 No budget categories defined. Click &ldquo;Add Category&rdquo; to create one.
@@ -926,14 +987,38 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
 
       {/* Bottom Save Action Bar */}
       <div className="sticky bottom-4 z-30 p-4 rounded-xl border border-border bg-card/95 backdrop-blur-md shadow-lg flex items-center justify-between">
-        <div className="text-xs text-muted-foreground">
-          Ready to save tailored blueprint into your isolated workspace.
+        <div className="text-xs max-w-md">
+          {isSaveBlockedByBudget ? (
+            <span className="text-destructive font-medium flex items-center gap-1.5">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+              <span>
+                Cannot save: Budget allocations ({totalAllocatedPercent}%) exceed 100%. Reduce category amounts by ${overAmount.toLocaleString()} to proceed.
+              </span>
+            </span>
+          ) : (
+            <span className="text-muted-foreground">
+              Ready to save tailored blueprint into your isolated workspace.
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={onReset} disabled={isPersisting}>
             Regenerate
           </Button>
-          <Button size="sm" onClick={handlePersist} disabled={isPersisting} className="gap-2">
+          <Button
+            size="sm"
+            onClick={handlePersist}
+            disabled={isPersisting || isSaveBlockedByBudget}
+            className={cn(
+              "gap-2 shadow-sm transition-all",
+              isSaveBlockedByBudget && "opacity-60 cursor-not-allowed"
+            )}
+            title={
+              isSaveBlockedByBudget
+                ? `Allocations exceed budget by $${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Reduce amounts to proceed.`
+                : undefined
+            }
+          >
             {isPersisting ? (
               <>
                 <RefreshCw className="h-3.5 w-3.5 animate-spin" />
