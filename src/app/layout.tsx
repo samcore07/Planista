@@ -4,6 +4,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { RenderingIndicator } from "@/components/rendering/rendering-indicator";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://planista-five.vercel.app"),
   title: "Planista — Intelligent Event Planning & Production",
   description:
     "Transform natural language requests into actionable blueprints with live budget intelligence, adaptive timelines, and context-aware planning copilot.",
@@ -15,6 +16,15 @@ export const metadata: Metadata = {
     "event management",
     "AI architect",
   ],
+  openGraph: {
+    title: "Planista — Intelligent Event Planning & Production",
+    description:
+      "Transform natural language requests into actionable blueprints with live budget intelligence and adaptive timelines.",
+    url: "https://planista-five.vercel.app",
+    siteName: "Planista",
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

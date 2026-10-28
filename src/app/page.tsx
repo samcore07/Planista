@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ShowcaseNav } from "@/components/home/showcase-nav";
 import { HeaderAuthButtons, CtaAuthButton } from "@/components/home/header-auth-buttons";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { TutorialVideo } from "@/components/home/tutorial-video";
 
 export default function Home() {
   const capabilities = [
@@ -574,16 +575,7 @@ export default function Home() {
             {/* Video Frame */}
             <div className="relative mx-auto max-w-4xl">
               <div className="relative rounded-2xl border border-border/80 bg-card p-2.5 sm:p-3.5 shadow-2xl backdrop-blur-xl">
-                <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/95 shadow-inner">
-                  {/* YouTube Embed Video - swap video ID below with your video */}
-                  <iframe
-                    className="w-full h-full border-0"
-                    src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&modestbranding=1"
-                    title="Planista Product Tutorial & Walkthrough"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
+                <TutorialVideo />
               </div>
 
               {/* Timestamp / Chapter Highlights */}
