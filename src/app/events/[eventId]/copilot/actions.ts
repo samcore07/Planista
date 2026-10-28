@@ -7,6 +7,7 @@ import { BudgetDAL } from "@/lib/dal/budget.dal";
 import { TasksDAL } from "@/lib/dal/tasks.dal";
 import { CopilotDAL, CopilotActionProposal, copilotActionProposalSchema, CopilotMessage } from "@/lib/dal/copilot.dal";
 import { aiProvider } from "@/lib/ai/provider";
+import { GroqClient } from "@/lib/ai/groq";
 import { EventOrchestratorService } from "@/services/orchestrator.service";
 
 export interface SendMessageResult {
@@ -43,65 +44,100 @@ export async function sendCopilotMessageAction(
   };
   await CopilotDAL.appendMessage(eventId, userMsg);
 
-  // 3. Synthesize contextual action proposal
-  const lower = trimmed.toLowerCase();
-  let proposal: CopilotActionProposal;
+  // 3. Synthesize contextual action proposal via Groq AI or deterministic engine
+  let assistantReplyText: string | null = null;
+  let proposal: CopilotActionProposal | undefined = undefined;
 
-  if (lower.includes("reduce") || lower.includes("cheaper decor") || lower.includes("cut budget")) {
-    proposal = {
-      actionType: "optimize_category",
-      summary: "Reduce floral & decor budget by $1,500 and substitute imported stems",
-      explanation:
-        "Proposing a $1,500 budget reduction in Floral & Decor by shifting to seasonal local foliage and pillar candles.",
-      financialImpact: {
-        category: "Floral & Decor",
-        amountDelta: -1500,
-      },
-      tradeOffs: [
-        "Limits custom rare botanical varieties in favor of in-season greens",
-        "Retains identical ambient warmth and centerpiece scale",
-      ],
-    };
-  } else if (lower.includes("weather") || lower.includes("rain") || lower.includes("storm") || lower.includes("backup")) {
-    proposal = {
-      actionType: "add_task",
-      summary: "Add inclement weather contingency checklist task: Reserve tent sidewalls",
-      explanation:
-        "Identified outdoor risk. Creating a milestone to verify marquee 72-hour weather guarantee with rental company.",
-      tradeOffs: [
-        "Adds one coordination verification milestone 3 days before event",
-        "Guarantees dry guest seating in case of rainfall",
-      ],
-    };
-  } else if (lower.includes("reschedule") || lower.includes("delay")) {
-    const firstTask = tasks[0];
-    proposal = {
-      actionType: "reschedule_task",
-      summary: `Propose shifting earliest task "${firstTask?.title || "Checklist Item"}" by 5 days`,
-      explanation:
-        "Cascading schedule shift across downstream dependencies to reflect vendor load-in delays.",
-      scheduleImpact: {
-        taskId: firstTask?.id || "task_1",
-        proposedDate: new Date(Date.now() + 5 * 86400000).toISOString(),
-      },
-      tradeOffs: [
-        "Compresses rehearsal window by 5 days",
-        "Prevents unconfirmed vendor bookings from blocking timeline",
-      ],
-    };
-  } else {
-    // Default through provider abstraction
-    proposal = await aiProvider.proposeCopilotAction({ event, categories, tasks }, trimmed);
+  if (GroqClient.isConfigured()) {
+    try {
+      const previousHistory = await CopilotDAL.getHistory(eventId);
+      const groqResponse = await GroqClient.chatCopilot({
+        event: event as unknown as Record<string, unknown>,
+        categories: categories as unknown as Record<string, unknown>[],
+        tasks: tasks as unknown as Record<string, unknown>[],
+        userMessage: trimmed,
+        conversationHistory: previousHistory.map((m) => ({
+          sender: m.sender,
+          content: m.content,
+        })),
+      });
+
+      if (groqResponse) {
+        assistantReplyText = groqResponse.reply;
+        if (groqResponse.proposal) {
+          const validated = copilotActionProposalSchema.safeParse(groqResponse.proposal);
+          if (validated.success) {
+            proposal = validated.data;
+          }
+        }
+      }
+    } catch {
+      // Fall through to deterministic intent detection
+    }
   }
 
-  // 4. Validate through Zod
-  const validatedProposal = copilotActionProposalSchema.parse(proposal);
+  // Fallback to deterministic intent detection if Groq not configured or didn't return
+  if (!assistantReplyText) {
+    const lower = trimmed.toLowerCase();
+    if (lower.includes("reduce") || lower.includes("cheaper decor") || lower.includes("cut budget")) {
+      proposal = {
+        actionType: "optimize_category",
+        summary: "Reduce floral & decor budget by $1,500 and substitute imported stems",
+        explanation:
+          "Proposing a $1,500 budget reduction in Floral & Decor by shifting to seasonal local foliage and pillar candles.",
+        financialImpact: {
+          category: "Floral & Decor",
+          amountDelta: -1500,
+        },
+        tradeOffs: [
+          "Limits custom rare botanical varieties in favor of in-season greens",
+          "Retains identical ambient warmth and centerpiece scale",
+        ],
+      };
+      assistantReplyText = proposal.explanation;
+    } else if (lower.includes("weather") || lower.includes("rain") || lower.includes("storm") || lower.includes("backup")) {
+      proposal = {
+        actionType: "add_task",
+        summary: "Add inclement weather contingency checklist task: Reserve tent sidewalls",
+        explanation:
+          "Identified outdoor risk. Creating a milestone to verify marquee 72-hour weather guarantee with rental company.",
+        tradeOffs: [
+          "Adds one coordination verification milestone 3 days before event",
+          "Guarantees dry guest seating in case of rainfall",
+        ],
+      };
+      assistantReplyText = proposal.explanation;
+    } else if (lower.includes("reschedule") || lower.includes("delay")) {
+      const firstTask = tasks[0];
+      proposal = {
+        actionType: "reschedule_task",
+        summary: `Propose shifting earliest task "${firstTask?.title || "Checklist Item"}" by 5 days`,
+        explanation:
+          "Cascading schedule shift across downstream dependencies to reflect vendor load-in delays.",
+        scheduleImpact: {
+          taskId: firstTask?.id || "task_1",
+          proposedDate: new Date(Date.now() + 5 * 86400000).toISOString(),
+        },
+        tradeOffs: [
+          "Compresses rehearsal window by 5 days",
+          "Prevents unconfirmed vendor bookings from blocking timeline",
+        ],
+      };
+      assistantReplyText = proposal.explanation;
+    } else {
+      proposal = await aiProvider.proposeCopilotAction({ event, categories, tasks }, trimmed);
+      assistantReplyText = proposal.explanation;
+    }
+  }
+
+  // 4. Validate proposal if present
+  const validatedProposal = proposal ? copilotActionProposalSchema.parse(proposal) : undefined;
 
   // 5. Append Copilot response with proposal
   const copilotMsg: CopilotMessage = {
     id: `cop_${Date.now()}`,
     sender: "copilot",
-    content: validatedProposal.explanation,
+    content: assistantReplyText || "I reviewed your event context and updated the planning recommendations.",
     proposal: validatedProposal,
     isApplied: false,
     createdAt: new Date().toISOString(),

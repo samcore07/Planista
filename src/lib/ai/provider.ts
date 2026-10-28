@@ -3,6 +3,7 @@ import {
   eventBlueprintSchema,
   EventBlueprint,
 } from "@/types/blueprint.types";
+import { GroqClient } from "@/lib/ai/groq";
 
 export interface BlueprintGenerationInput {
   eventType: string;
@@ -222,9 +223,21 @@ export class DeterministicBlueprintEngine {
  */
 export class PlanistaAIProvider implements AIProvider {
   async generateBlueprint(input: BlueprintGenerationInput): Promise<EventBlueprint> {
+    // 1. Attempt generation using Groq Llama 3.3 70B if configured
+    if (GroqClient.isConfigured()) {
+      try {
+        const groqBlueprint = await GroqClient.generateBlueprint(input);
+        if (groqBlueprint) {
+          return groqBlueprint;
+        }
+      } catch {
+        // Fall through to Gemini or Deterministic engine
+      }
+    }
+
     const geminiKey = env.GEMINI_API_KEY;
 
-    // If an external API key is provided, attempt structured generation with LLM
+    // 2. If Gemini API key is provided, attempt structured generation with Gemini
     if (geminiKey) {
       try {
         const response = await fetch(

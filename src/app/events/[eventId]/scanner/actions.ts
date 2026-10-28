@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { DocumentsDAL } from "@/lib/dal/documents.dal";
+import { GroqClient } from "@/lib/ai/groq";
 import { type Json } from "@/types/database.types";
 
 export async function uploadDocumentAction(eventId: string, formData: FormData): Promise<void> {
@@ -24,14 +25,37 @@ export async function uploadDocumentAction(eventId: string, formData: FormData):
     // 1. Validate upload restrictions
     DocumentsDAL.validateUpload(file.name, file.type, file.size);
 
-    // 2. Perform server-side extraction (prompt-injection immune, untrusted text safe)
-    const extractedData = DocumentsDAL.extractDocumentData(
+    // 2. Perform server-side extraction (Groq Vision if image & configured, or deterministic fallback)
+    let extractedData = DocumentsDAL.extractDocumentData(
       file.name,
       file.size,
       manualVendor,
       manualAmount,
       manualCategory
     );
+
+    if (GroqClient.isConfigured() && file.type.startsWith("image/")) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const base64Data = Buffer.from(arrayBuffer).toString("base64");
+        const aiExtracted = await GroqClient.extractDocumentVision({
+          fileName: file.name,
+          mimeType: file.type,
+          base64Data,
+        });
+
+        if (aiExtracted) {
+          extractedData = {
+            ...aiExtracted,
+            vendorName: manualVendor || aiExtracted.vendorName,
+            amount: manualAmount !== undefined ? manualAmount : aiExtracted.amount,
+            suggestedCategory: manualCategory || aiExtracted.suggestedCategory,
+          };
+        }
+      } catch {
+        // Fall back to filename-based extraction
+      }
+    }
 
     const supabase = await createClient();
 

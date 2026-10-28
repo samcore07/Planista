@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { ThemeDAL } from "@/lib/dal/theme.dal";
+import { ThemeDAL, ThemeConceptInput } from "@/lib/dal/theme.dal";
 import { EventsDAL } from "@/lib/dal/events.dal";
+import { GroqClient } from "@/lib/ai/groq";
 
 export async function selectThemeAction(eventId: string, themeId: string): Promise<void> {
   try {
@@ -27,10 +28,25 @@ export async function createOrRefineThemeAction(
 
   try {
     const event = await EventsDAL.getEventById(eventId);
-    const concept = ThemeDAL.generateCuratedConcept(
-      prompt || name || "Atmospheric Celebration",
-      event?.event_type || "Celebration"
-    );
+    let concept: ThemeConceptInput | null = null;
+
+    if (GroqClient.isConfigured()) {
+      try {
+        concept = await GroqClient.generateTheme(
+          prompt || name || "Atmospheric Celebration",
+          event?.event_type || "Celebration"
+        );
+      } catch {
+        // Fall back to curated concept
+      }
+    }
+
+    if (!concept) {
+      concept = ThemeDAL.generateCuratedConcept(
+        prompt || name || "Atmospheric Celebration",
+        event?.event_type || "Celebration"
+      );
+    }
 
     if (name) {
       concept.name = name;

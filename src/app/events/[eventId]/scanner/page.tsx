@@ -5,6 +5,7 @@ import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { EventsDAL } from "@/lib/dal/events.dal";
 import { DocumentsDAL, ExtractedDocumentData } from "@/lib/dal/documents.dal";
 import { BudgetDAL } from "@/lib/dal/budget.dal";
+import { GroqClient } from "@/lib/ai/groq";
 import { uploadDocumentAction, confirmScannedExpenseAction } from "./actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,8 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
       )
     : null;
 
-  const isOcrConfigured = !!process.env.DOCUMENT_OCR_API_KEY;
+  const isGroqConfigured = GroqClient.isConfigured();
+  const isOcrConfigured = isGroqConfigured || !!process.env.DOCUMENT_OCR_API_KEY;
 
   return (
     <Suspense fallback={<div className="p-8 text-center text-muted-foreground">Loading Document Scanner...</div>}>
@@ -72,7 +74,12 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {isOcrConfigured ? (
+            {isGroqConfigured ? (
+              <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 gap-1.5 py-1">
+                <Cpu className="h-3.5 w-3.5" />
+                AI Vision Active (Groq Llama 3.2)
+              </Badge>
+            ) : isOcrConfigured ? (
               <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500 gap-1.5 py-1">
                 <Cpu className="h-3.5 w-3.5" />
                 OCR Engine Active
@@ -99,11 +106,10 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
           <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 text-sm text-amber-600 dark:text-amber-400">
             <p className="font-semibold flex items-center gap-2">
               <ShieldAlert className="h-4 w-4" />
-              OCR Engine Notice (Configuration Fallback Active)
+              AI Vision Engine Notice (Manual Fallback Active)
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              <code>DOCUMENT_OCR_API_KEY</code> is not configured. Planista provides full manual entry and verification
-              so you can record quotes and receipts without any blocker.
+              Configure <code>GROQ_API_KEY</code> in your environment to enable automated Llama 3.2 Vision invoice scanning. Planista provides full manual entry and verification so you can record quotes and receipts without any blocker.
             </p>
           </div>
         )}
