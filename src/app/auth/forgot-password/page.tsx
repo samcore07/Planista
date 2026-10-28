@@ -17,17 +17,25 @@ export default function ForgotPasswordPage() {
     event.preventDefault();
     setError(null);
     setMessage(null);
-    setLoading(true);
 
+    // Read form values BEFORE setting loading state to avoid disabled inputs being omitted
     const formData = new FormData(event.currentTarget);
-    const result = await requestPasswordReset(formData);
 
-    if (!result.success) {
-      setError(result.error || "Failed to request password reset.");
-    } else {
-      setMessage(result.message || "Password recovery email sent.");
+    setLoading(true);
+    try {
+      const result = await requestPasswordReset(formData);
+
+      if (!result.success) {
+        setError(result.error || "Failed to request password reset.");
+      } else {
+        setMessage(result.message || "Password recovery email sent.");
+      }
+    } catch (err: unknown) {
+      console.error("Password reset request error:", err);
+      setError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (

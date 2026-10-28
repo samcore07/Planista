@@ -14,6 +14,7 @@ export type AuthActionResult = {
   success: boolean;
   error?: string;
   message?: string;
+  redirectTo?: string;
 };
 
 async function getEffectiveOrigin(): Promise<string> {
@@ -90,7 +91,10 @@ export async function signInWithPassword(formData: FormData): Promise<AuthAction
     redirectTo = "/dashboard";
   }
 
-  redirect(redirectTo);
+  return {
+    success: true,
+    redirectTo,
+  };
 }
 
 /**
@@ -141,7 +145,10 @@ export async function signUp(formData: FormData): Promise<AuthActionResult> {
     };
   }
 
-  redirect("/dashboard");
+  return {
+    success: true,
+    redirectTo: "/dashboard",
+  };
 }
 
 /**
@@ -239,5 +246,8 @@ export async function resetPassword(formData: FormData): Promise<AuthActionResul
     };
   }
 
-  redirect("/dashboard");
+  return {
+    success: true,
+    redirectTo: "/auth/login?updated=true",
+  };
 }

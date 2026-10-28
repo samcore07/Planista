@@ -15,17 +15,24 @@ export default function ResetPasswordPage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setLoading(true);
 
+    // Read form values BEFORE setting loading state to avoid disabled inputs being omitted
     const formData = new FormData(event.currentTarget);
+
+    setLoading(true);
 
     try {
       const result = await resetPassword(formData);
+      if (result && result.success) {
+        window.location.href = result.redirectTo || "/auth/login?updated=true";
+        return;
+      }
       if (result && !result.success) {
         setError(result.error || "Failed to update password.");
       }
-    } catch {
-      // In Next.js redirect() throws internally
+    } catch (err: unknown) {
+      console.error("Password reset error:", err);
+      setError("An unexpected error occurred during password update.");
     } finally {
       setLoading(false);
     }

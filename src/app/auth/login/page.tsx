@@ -20,18 +20,25 @@ function LoginForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setLoading(true);
 
+    // Read form values BEFORE setting loading state to avoid disabled inputs being omitted
     const formData = new FormData(event.currentTarget);
     formData.append("redirectTo", redirectTo);
 
+    setLoading(true);
+
     try {
       const result = await signInWithPassword(formData);
+      if (result && result.success) {
+        window.location.href = result.redirectTo || redirectTo;
+        return;
+      }
       if (result && !result.success) {
         setError(result.error || "Authentication failed. Please verify credentials.");
       }
-    } catch {
-      // In Next.js, redirect() throws an error internally which is caught here if not rethrown
+    } catch (err: unknown) {
+      console.error("Sign in error:", err);
+      setError("An unexpected error occurred during sign in.");
     } finally {
       setLoading(false);
     }

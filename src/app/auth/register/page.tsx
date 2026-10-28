@@ -17,21 +17,29 @@ export default function RegisterPage() {
     event.preventDefault();
     setError(null);
     setSuccessMessage(null);
-    setLoading(true);
 
+    // Read form values BEFORE setting loading state to avoid disabled inputs being omitted
     const formData = new FormData(event.currentTarget);
+
+    setLoading(true);
 
     try {
       const result = await signUp(formData);
       if (result) {
-        if (!result.success) {
+        if (result.success) {
+          if (result.message) {
+            setSuccessMessage(result.message);
+          } else if (result.redirectTo) {
+            window.location.href = result.redirectTo;
+            return;
+          }
+        } else {
           setError(result.error || "Registration failed. Please check your details.");
-        } else if (result.message) {
-          setSuccessMessage(result.message);
         }
       }
-    } catch {
-      // In Next.js redirect() throws an error internally
+    } catch (err: unknown) {
+      console.error("Sign up error:", err);
+      setError("An unexpected error occurred during registration.");
     } finally {
       setLoading(false);
     }

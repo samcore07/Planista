@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { env } from "@/config/env";
+import { type Database } from "@/types/database.types";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -26,13 +28,43 @@ export async function GET(request: Request) {
   }
 
   if (code) {
-    const supabase = await createClient();
+    const redirectUrl = `${effectiveOrigin}${next.startsWith("/") ? next : `/${next}`}`;
+    const response = NextResponse.redirect(redirectUrl);
+
+    const supabase = createServerClient<Database>(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            const cookieHeader = request.headers.get("cookie") ?? "";
+            return cookieHeader
+              .split(";")
+              .map((cookie) => {
+                const [name, ...rest] = cookie.trim().split("=");
+                return { name, value: rest.join("=") };
+              })
+              .filter((c) => c.name);
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options);
+            });
+          },
+        },
+      }
+    );
+
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${effectiveOrigin}${next}`);
+      return response;
     }
+
+    console.error("[AuthCallback] Code exchange failed:", error.message);
+    return NextResponse.redirect(
+      `${effectiveOrigin}/auth/login?error=${encodeURIComponent(error.message)}`
+    );
   }
 
-  // Return the user to an error page with instructions
-  return NextResponse.redirect(`${effectiveOrigin}/auth/login?error=Could%20not%20authenticate%20user`);
+  return NextResponse.redirect(`${effectiveOrigin}/auth/login?error=Missing%20auth%20code`);
 }
