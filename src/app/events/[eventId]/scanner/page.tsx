@@ -17,6 +17,7 @@ import {
   Upload,
   AlertTriangle,
   CheckCircle,
+  CheckCircle2,
   HelpCircle,
   ArrowRight,
   ShieldAlert,
@@ -104,8 +105,8 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
 
         {/* Delete success alert */}
         {deleted === "true" && (
-          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 shrink-0" />
+          <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span>Document deleted successfully.</span>
           </div>
         )}
@@ -209,11 +210,11 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2">
                         {doc.extraction_status === "completed" ? (
-                          <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 text-[10px]">
+                          <Badge variant="outline" className="border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-medium text-[10px]">
                             Verified
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-[10px]">
+                          <Badge variant="outline" className="border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 font-medium text-[10px]">
                             Pending
                           </Badge>
                         )}

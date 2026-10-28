@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import {
   AlertCircle,
-  CheckCircle,
+  CheckCircle2,
   Layers,
   Receipt,
   Trash2,
@@ -101,15 +101,15 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
       )}
 
       {isSaved && (
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>Budget updates successfully recorded and recalculated.</span>
         </div>
       )}
 
       {isDeleted && (
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>Line item successfully removed.</span>
         </div>
       )}

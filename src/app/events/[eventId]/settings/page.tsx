@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Archive, Trash2, ArrowLeft, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
+import { Archive, Trash2, ArrowLeft, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { EventsDAL } from "@/lib/dal/events.dal";
 import {
@@ -68,15 +68,15 @@ async function SettingsContent({ params, searchParams }: SettingsPageProps) {
       )}
 
       {isSaved && (
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>Event settings successfully updated.</span>
         </div>
       )}
 
       {isRestored && (
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>Event successfully restored to active status.</span>
         </div>
       )}

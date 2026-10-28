@@ -4,7 +4,6 @@ import {
   CalendarCheck,
   CheckCircle2,
   AlertCircle,
-  CheckCircle,
   Trash2,
   Calendar,
   Clock,
@@ -110,22 +109,22 @@ async function TimelinePageContent({ params, searchParams }: TimelinePageProps) 
       )}
 
       {isSaved && (
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>Checklist task successfully updated and re-evaluated.</span>
         </div>
       )}
 
       {isDeleted && (
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>Task removed from event checklist.</span>
         </div>
       )}
 
       {isShifted && (
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 shrink-0" />
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
           <span>Adaptive schedule shift successfully cascaded across downstream milestones.</span>
         </div>
       )}
