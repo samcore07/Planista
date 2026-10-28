@@ -6,7 +6,7 @@ import { EventsDAL } from "@/lib/dal/events.dal";
 import { DocumentsDAL, ExtractedDocumentData } from "@/lib/dal/documents.dal";
 import { BudgetDAL } from "@/lib/dal/budget.dal";
 import { GroqClient } from "@/lib/ai/groq";
-import { uploadDocumentAction, confirmScannedExpenseAction } from "./actions";
+import { uploadDocumentAction, confirmScannedExpenseAction, deleteDocumentAction } from "./actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,18 +21,19 @@ import {
   ArrowRight,
   ShieldAlert,
   Cpu,
+  Trash2,
 } from "lucide-react";
 
 export const instant = false;
 
 interface PageProps {
   params: Promise<{ eventId: string }>;
-  searchParams: Promise<{ docId?: string; error?: string }>;
+  searchParams: Promise<{ docId?: string; error?: string; deleted?: string }>;
 }
 
 export default async function ScannerPage({ params, searchParams }: PageProps) {
   const { eventId } = await params;
-  const { docId, error: errorMessage } = await searchParams;
+  const { docId, error: errorMessage, deleted } = await searchParams;
 
   const user = await getAuthenticatedUser();
   if (!user) redirect(`/auth/login?redirectTo=/events/${eventId}/scanner`);
@@ -98,6 +99,14 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
           <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
+          </div>
+        )}
+
+        {/* Delete success alert */}
+        {deleted === "true" && (
+          <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>Document deleted successfully.</span>
           </div>
         )}
 
@@ -198,7 +207,7 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
                           {doc.document_type} • {(doc.file_size_bytes / 1024).toFixed(0)} KB
                         </p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         {doc.extraction_status === "completed" ? (
                           <Badge variant="outline" className="text-emerald-500 border-emerald-500/30 text-[10px]">
                             Verified
@@ -213,6 +222,18 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
                             Review
                           </Button>
                         </Link>
+                        <form action={deleteDocumentAction.bind(null, eventId, doc.id)}>
+                          <Button
+                            type="submit"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            title="Delete document"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </form>
                       </div>
                     </div>
                   ))
@@ -237,9 +258,23 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
                         uncertainties before saving.
                       </CardDescription>
                     </div>
-                    <Badge variant="secondary" className="capitalize">
-                      {extractedData.documentType}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="capitalize">
+                        {extractedData.documentType}
+                      </Badge>
+                      <form action={deleteDocumentAction.bind(null, eventId, activeDoc.id)}>
+                        <Button
+                          type="submit"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5 text-xs"
+                          title="Delete document"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </Button>
+                      </form>
+                    </div>
                   </div>
                 </CardHeader>
 
@@ -380,6 +415,21 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
                       </Button>
                     </div>
                   </form>
+
+                  <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Discard this document permanently?</span>
+                    <form action={deleteDocumentAction.bind(null, eventId, activeDoc.id)}>
+                      <Button
+                        type="submit"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 gap-1.5 text-xs"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        Delete Document
+                      </Button>
+                    </form>
+                  </div>
                 </CardContent>
               </Card>
             ) : (

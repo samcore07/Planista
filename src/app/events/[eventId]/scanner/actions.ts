@@ -133,3 +133,22 @@ export async function confirmScannedExpenseAction(
     redirect(`/events/${eventId}/budget?saved=true`);
   }
 }
+
+export async function deleteDocumentAction(eventId: string, documentId: string): Promise<void> {
+  const user = await getAuthenticatedUser();
+  if (!user) redirect(`/auth/login?redirectTo=/events/${eventId}/scanner`);
+
+  let deleteSuccess = false;
+  try {
+    await DocumentsDAL.deleteDocument(eventId, documentId);
+    deleteSuccess = true;
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to delete document";
+    redirect(`/events/${eventId}/scanner?error=${encodeURIComponent(message)}`);
+  }
+
+  if (deleteSuccess) {
+    revalidatePath(`/events/${eventId}/scanner`);
+    redirect(`/events/${eventId}/scanner?deleted=true`);
+  }
+}

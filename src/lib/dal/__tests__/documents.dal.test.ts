@@ -1,6 +1,12 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { DocumentsDAL, MAX_FILE_SIZE_BYTES } from "../documents.dal";
 import { BudgetCategoryRow, ExpenseRow } from "../budget.dal";
+import { getAuthenticatedUser, createClient } from "@/lib/supabase/server";
+
+vi.mock("@/lib/supabase/server", () => ({
+  getAuthenticatedUser: vi.fn(),
+  createClient: vi.fn(),
+}));
 
 describe("DocumentsDAL Unit Tests", () => {
   describe("Upload Validation", () => {
@@ -125,6 +131,55 @@ describe("DocumentsDAL Unit Tests", () => {
       expect(report.isPossibleDuplicate).toBe(true);
       expect(report.matchingExpenseTitle).toBe("Grand Hall Booking Deposit");
       expect(report.warnings.some((w) => w.includes("Possible duplicate detected"))).toBe(true);
+    });
+  });
+
+  describe("Document Deletion", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it("throws unauthorized when attempting to delete without an authenticated session", async () => {
+      vi.mocked(getAuthenticatedUser).mockResolvedValueOnce(null);
+      await expect(DocumentsDAL.deleteDocument("evt_1", "doc_1")).rejects.toThrow(/unauthorized/i);
+    });
+
+    it("successfully deletes document when authorized", async () => {
+      vi.mocked(getAuthenticatedUser).mockResolvedValueOnce({
+        id: "usr_1",
+        app_metadata: {},
+        user_metadata: {},
+        aud: "authenticated",
+        created_at: new Date().toISOString(),
+      } as unknown as Awaited<ReturnType<typeof getAuthenticatedUser>>);
+      const mockEq2 = vi.fn().mockResolvedValueOnce({ error: null });
+      const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 });
+      const mockDelete = vi.fn().mockReturnValue({ eq: mockEq1 });
+      const mockFrom = vi.fn().mockReturnValue({ delete: mockDelete });
+      vi.mocked(createClient).mockResolvedValueOnce({ from: mockFrom } as unknown as Awaited<ReturnType<typeof createClient>>);
+
+      const result = await DocumentsDAL.deleteDocument("evt_1", "doc_1");
+      expect(result).toBe(true);
+      expect(mockFrom).toHaveBeenCalledWith("uploaded_documents");
+      expect(mockEq1).toHaveBeenCalledWith("id", "doc_1");
+      expect(mockEq2).toHaveBeenCalledWith("event_id", "evt_1");
+    });
+
+    it("throws error when Supabase deletion fails", async () => {
+      vi.mocked(getAuthenticatedUser).mockResolvedValueOnce({
+        id: "usr_1",
+        app_metadata: {},
+        user_metadata: {},
+        aud: "authenticated",
+        created_at: new Date().toISOString(),
+      } as unknown as Awaited<ReturnType<typeof getAuthenticatedUser>>);
+      const mockEq2 = vi.fn().mockResolvedValueOnce({ error: { message: "Database connection failed" } });
+      const mockEq1 = vi.fn().mockReturnValue({ eq: mockEq2 });
+      const mockDelete = vi.fn().mockReturnValue({ eq: mockEq1 });
+      const mockFrom = vi.fn().mockReturnValue({ delete: mockDelete });
+      vi.mocked(createClient).mockResolvedValueOnce({ from: mockFrom } as unknown as Awaited<ReturnType<typeof createClient>>);
+
+      await expect(DocumentsDAL.deleteDocument("evt_1", "doc_1")).rejects.toThrow(/database connection failed/i);
     });
   });
 });

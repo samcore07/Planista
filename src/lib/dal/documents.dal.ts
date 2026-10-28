@@ -66,6 +66,24 @@ export class DocumentsDAL {
   }
 
   /**
+   * Deletes an uploaded document record from the database.
+   */
+  static async deleteDocument(eventId: string, documentId: string): Promise<boolean> {
+    const user = await getAuthenticatedUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("uploaded_documents")
+      .delete()
+      .eq("id", documentId)
+      .eq("event_id", eventId);
+
+    if (error) throw new Error(`Failed to delete document: ${error.message}`);
+    return true;
+  }
+
+  /**
    * Validates document size and MIME type strictly
    */
   static validateUpload(fileName: string, mimeType: string, sizeBytes: number): void {
