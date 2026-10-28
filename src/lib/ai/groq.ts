@@ -8,8 +8,8 @@ import { ThemeConceptInput, themeConceptInputSchema } from "@/lib/dal/theme.dal"
 import { ExtractedDocumentData } from "@/lib/dal/documents.dal";
 
 const GROQ_API_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
-const TEXT_MODEL = "llama-3.3-70b-versatile";
-const VISION_MODEL = "llama-3.2-11b-vision-preview";
+
+let cachedTextModel: string | null = null;
 
 type RecordUnknown = Record<string, unknown>;
 
@@ -473,7 +473,8 @@ export function normalizeDocumentExtraction(raw: unknown, fileName?: string): Ex
 
 export class GroqClient {
   static getApiKey(): string | undefined {
-    return process.env.GROQ_API_KEY || env.GROQ_API_KEY;
+    const raw = process.env.GROQ_API_KEY || env.GROQ_API_KEY;
+    return raw ? raw.trim() : undefined;
   }
 
   static isConfigured(): boolean {
@@ -482,11 +483,60 @@ export class GroqClient {
   }
 
   /**
-   * Generates a comprehensive, schema-validated event blueprint using Groq Llama 3.3 70B
+   * Dynamically resolves the best available chat model on the Groq account
+   */
+  static async resolveTextModel(apiKey: string): Promise<string> {
+    if (cachedTextModel) return cachedTextModel;
+
+    const PREFERRED_PRIORITY = [
+      "openai/gpt-oss-120b",
+      "llama-3.3-70b-versatile",
+      "openai/gpt-oss-20b",
+      "llama-3.1-70b-versatile",
+      "llama-3.1-8b-instant",
+      "qwen/qwen3.8-27b",
+      "allam-2-7b",
+    ];
+
+    try {
+      const res = await fetch("https://api.groq.com/openai/v1/models", {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const availableIds: string[] = (json.data || []).map((m: { id: string }) => m.id);
+        console.log(`[GroqClient] Available models on account: ${availableIds.join(", ")}`);
+
+        for (const candidate of PREFERRED_PRIORITY) {
+          if (availableIds.includes(candidate)) {
+            cachedTextModel = candidate;
+            console.log(`[GroqClient] Selected active model: "${cachedTextModel}"`);
+            return cachedTextModel;
+          }
+        }
+
+        const fallback = availableIds.find((id) => !id.includes("whisper") && !id.includes("guard"));
+        if (fallback) {
+          cachedTextModel = fallback;
+          return fallback;
+        }
+      }
+    } catch (err) {
+      console.warn("[GroqClient] Could not fetch models list:", err);
+    }
+
+    cachedTextModel = "openai/gpt-oss-120b";
+    return cachedTextModel;
+  }
+
+  /**
+   * Generates a comprehensive, schema-validated event blueprint using Groq AI
    */
   static async generateBlueprint(input: BlueprintGenerationInput): Promise<EventBlueprint | null> {
     const apiKey = this.getApiKey();
     if (!apiKey) return null;
+
+    const model = await this.resolveTextModel(apiKey);
 
     const systemPrompt = `You are Planista's Chief Event Production Architect.
 Your task is to generate a comprehensive, highly realistic production blueprint for an upcoming event.
@@ -573,7 +623,7 @@ CRITICAL RULES:
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: TEXT_MODEL,
+          model,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
@@ -584,7 +634,8 @@ CRITICAL RULES:
       });
 
       if (!response.ok) {
-        console.error(`[GroqClient] API error: ${response.status} ${response.statusText}`);
+        const errBody = await response.text();
+        console.error(`[GroqClient] API error (${response.status} ${response.statusText}):`, errBody);
         return null;
       }
 
@@ -598,7 +649,7 @@ CRITICAL RULES:
       const validated = eventBlueprintSchema.safeParse(normalized);
 
       if (validated.success) {
-        console.log(`[GroqClient] Successfully generated AI blueprint for "${input.title || input.eventType}"`);
+        console.log(`[GroqClient] Successfully generated AI blueprint for "${input.title || input.eventType}" using model ${model}`);
         return validated.data;
       } else {
         console.warn("[GroqClient] Blueprint validation warning, returning sanitized structure:", validated.error.format());
@@ -622,6 +673,8 @@ CRITICAL RULES:
   }): Promise<{ reply: string; proposal?: CopilotActionProposal } | null> {
     const apiKey = this.getApiKey();
     if (!apiKey) return null;
+
+    const model = await this.resolveTextModel(apiKey);
 
     const eventSummary = {
       title: params.event.title,
@@ -683,7 +736,7 @@ Guidelines:
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: TEXT_MODEL,
+          model,
           messages,
           response_format: { type: "json_object" },
           temperature: 0.3,
@@ -691,7 +744,8 @@ Guidelines:
       });
 
       if (!response.ok) {
-        console.error(`[GroqClient] Copilot API error: ${response.status} ${response.statusText}`);
+        const errBody = await response.text();
+        console.error(`[GroqClient] Copilot API error (${response.status} ${response.statusText}):`, errBody);
         return null;
       }
 
@@ -702,7 +756,7 @@ Guidelines:
       const cleaned = cleanJsonString(content);
       const parsed = JSON.parse(cleaned);
       const normalized = normalizeCopilotOutput(parsed);
-      console.log(`[GroqClient] Successfully generated Copilot response`);
+      console.log(`[GroqClient] Successfully generated Copilot response using model ${model}`);
       return normalized;
     } catch (err) {
       console.error("[GroqClient] chatCopilot exception:", err);
@@ -711,11 +765,13 @@ Guidelines:
   }
 
   /**
-   * Generates a creative bespoke theme concept using Groq Llama 3.3 70B
+   * Generates a creative bespoke theme concept using Groq AI
    */
   static async generateTheme(promptText: string, eventType: string = "Celebration"): Promise<ThemeConceptInput | null> {
     const apiKey = this.getApiKey();
     if (!apiKey) return null;
+
+    const model = await this.resolveTextModel(apiKey);
 
     const systemPrompt = `You are Planista's Creative Director & Event Stylist.
 Generate an extraordinary, bespoke theme and design concept based on the user's aesthetic vision.
@@ -746,7 +802,7 @@ Requirements:
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: TEXT_MODEL,
+          model,
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: `Event Type: ${eventType}\nTheme Prompt: ${promptText}` },
@@ -757,7 +813,8 @@ Requirements:
       });
 
       if (!response.ok) {
-        console.error(`[GroqClient] generateTheme API error: ${response.status} ${response.statusText}`);
+        const errBody = await response.text();
+        console.error(`[GroqClient] generateTheme API error (${response.status} ${response.statusText}):`, errBody);
         return null;
       }
 
@@ -771,7 +828,7 @@ Requirements:
       const validated = themeConceptInputSchema.safeParse(normalized);
 
       if (validated.success) {
-        console.log(`[GroqClient] Successfully generated AI theme "${normalized.name}"`);
+        console.log(`[GroqClient] Successfully generated AI theme "${normalized.name}" using model ${model}`);
         return validated.data;
       } else {
         console.warn("[GroqClient] Theme validation warning, returning normalized concept:", validated.error.format());
@@ -784,7 +841,7 @@ Requirements:
   }
 
   /**
-   * Extracts vendor name, amounts, and itemization from uploaded invoice/quote using Groq Llama 3.2 Vision
+   * Extracts vendor name, amounts, and itemization from uploaded invoice/quote using Groq AI
    */
   static async extractDocumentVision(params: {
     fileName: string;
@@ -812,14 +869,26 @@ Rules:
 - Return ONLY the JSON object.`;
 
     try {
-      const response = await fetch(GROQ_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: VISION_MODEL,
+      // Check if account has a vision model
+      let requestBody: RecordUnknown;
+      let hasVision = false;
+
+      try {
+        const modelsRes = await fetch("https://api.groq.com/openai/v1/models", {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        });
+        if (modelsRes.ok) {
+          const modelsJson = await modelsRes.json();
+          const ids: string[] = (modelsJson.data || []).map((m: { id: string }) => m.id);
+          hasVision = ids.some((id) => id.includes("vision"));
+        }
+      } catch {
+        hasVision = false;
+      }
+
+      if (hasVision) {
+        requestBody = {
+          model: "llama-3.2-11b-vision-preview",
           messages: [
             {
               role: "user",
@@ -836,11 +905,35 @@ Rules:
           ],
           response_format: { type: "json_object" },
           temperature: 0.1,
-        }),
+        };
+      } else {
+        const textModel = await this.resolveTextModel(apiKey);
+        requestBody = {
+          model: textModel,
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: `Document Filename: ${params.fileName}\nDocument Type: ${params.mimeType}\nPlease infer vendor partner name, estimated amount, expense category, and line item structure.`,
+            },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.1,
+        };
+      }
+
+      const response = await fetch(GROQ_API_ENDPOINT, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        console.error(`[GroqClient] Vision API error: ${response.status} ${response.statusText}`);
+        const errBody = await response.text();
+        console.error(`[GroqClient] Vision/Doc API error (${response.status} ${response.statusText}):`, errBody);
         return null;
       }
 
