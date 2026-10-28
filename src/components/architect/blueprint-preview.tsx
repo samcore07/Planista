@@ -6,7 +6,7 @@ import {
   Check,
   AlertTriangle,
   Info,
-  DollarSign,
+  IndianRupee,
   Calendar,
   Palette,
   ShieldAlert,
@@ -166,7 +166,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
   const handlePersist = async () => {
     if (isSaveBlockedByBudget) {
       setError(
-        `Cannot save blueprint: Total budget allocations ($${totalAllocated.toLocaleString()}) exceed target budget of $${totalTargetBudget.toLocaleString()} by $${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Please adjust category amounts to be within 100% before saving.`
+        `Cannot save blueprint: Total budget allocations (₹${totalAllocated.toLocaleString()}) exceed target budget of ₹${totalTargetBudget.toLocaleString()} by ₹${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Please adjust category amounts to be within 100% before saving.`
       );
       return;
     }
@@ -491,7 +491,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
               )}
               title={
                 isSaveBlockedByBudget
-                  ? `Allocations exceed budget by $${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Reduce amounts to proceed.`
+                  ? `Allocations exceed budget by ₹${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Reduce amounts to proceed.`
                   : undefined
               }
             >
@@ -590,7 +590,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
               />
               <div>
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-primary" />
+                  <IndianRupee className="h-4 w-4 text-primary" />
                   Budget Categories ({blueprint.budgetAllocations.length})
                 </CardTitle>
                 <CardDescription
@@ -605,10 +605,10 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                     <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />
                   )}
                   <span>
-                    Allocates {totalAllocatedPercent}% (${totalAllocated.toLocaleString()}) of the {input.currency} {totalTargetBudget.toLocaleString()} target
+                    Allocates {totalAllocatedPercent}% (₹${totalAllocated.toLocaleString()}) of the {input.currency} {totalTargetBudget.toLocaleString()} target
                     {isBudgetOver && (
                       <span className="font-bold ml-1">
-                        — Exceeds target by ${overAmount.toLocaleString()} ({totalAllocatedPercent - 100}%)
+                        — Exceeds target by ₹${overAmount.toLocaleString()} ({totalAllocatedPercent - 100}%)
                       </span>
                     )}
                   </span>
@@ -643,7 +643,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                 <div className="space-y-0.5">
                   <span className="font-semibold">Budget allocations exceed 100% target:</span>
                   <p className="text-[11px] leading-relaxed">
-                    Total allocated is ${totalAllocated.toLocaleString()} ({totalAllocatedPercent}%), which exceeds the {input.currency} {totalTargetBudget.toLocaleString()} target by ${overAmount.toLocaleString()}. You must reduce or remove category allocations to 100% or less before you can save and proceed.
+                    Total allocated is ₹${totalAllocated.toLocaleString()} ({totalAllocatedPercent}%), which exceeds the {input.currency} {totalTargetBudget.toLocaleString()} target by ₹${overAmount.toLocaleString()}. You must reduce or remove category allocations to 100% or less before you can save and proceed.
                   </p>
                 </div>
               </div>
@@ -678,7 +678,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                       </div>
                     </div>
                     <div className="text-primary font-semibold text-xs">
-                      ${cat.suggestedAmount.toLocaleString()} ({cat.percentage}%)
+                      ₹{cat.suggestedAmount.toLocaleString()} ({cat.percentage}%)
                     </div>
                     <p className="text-[11px] text-muted-foreground line-clamp-2">
                       {cat.rationale || "No specific rationale specified."}
@@ -992,7 +992,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
             <span className="text-destructive font-medium flex items-center gap-1.5">
               <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
               <span>
-                Cannot save: Budget allocations ({totalAllocatedPercent}%) exceed 100%. Reduce category amounts by ${overAmount.toLocaleString()} to proceed.
+                Cannot save: Budget allocations ({totalAllocatedPercent}%) exceed 100%. Reduce category amounts by ₹${overAmount.toLocaleString()} to proceed.
               </span>
             </span>
           ) : (
@@ -1015,7 +1015,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
             )}
             title={
               isSaveBlockedByBudget
-                ? `Allocations exceed budget by $${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Reduce amounts to proceed.`
+                ? `Allocations exceed budget by ₹${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Reduce amounts to proceed.`
                 : undefined
             }
           >
@@ -1089,7 +1089,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
           <div className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <h3 className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-primary" />
+                <IndianRupee className="h-4 w-4 text-primary" />
                 {budgetModal.mode === "add" ? "Add Budget Category" : "Edit Budget Category"}
               </h3>
               <button
@@ -1118,7 +1118,7 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="bg-amount" className="text-xs">
-                  Allocated Amount ({input.currency || "USD"})
+                  Allocated Amount ({input.currency || "INR"})
                 </Label>
                 <Input
                   id="bg-amount"

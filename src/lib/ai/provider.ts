@@ -303,7 +303,7 @@ You must return valid JSON matching the exact schema with overview, budgetAlloca
 
       return {
         actionType: "adjust_budget",
-        summary: `Reduce overall budget allocation by $${amount.toLocaleString()}`,
+        summary: `Reduce overall budget allocation by ₹${amount.toLocaleString()}`,
         explanation: `Identified potential surplus in decor and entertainment buffers without impacting venue or primary guest catering.`,
         financialImpact: {
           category: "Decor & Floral",

@@ -16,6 +16,9 @@ describe("Utility functions", () => {
   });
 
   it("formats currency correctly", () => {
+    const inr = formatCurrency(25000);
+    expect(inr).toMatch(/₹25,000/);
+
     const usd = formatCurrency(25000, "USD");
     expect(usd).toMatch(/\$25,000/);
 

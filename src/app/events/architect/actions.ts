@@ -85,7 +85,7 @@ export async function persistAcceptedBlueprintAction(
       location: input.location,
       guestCount: input.guestCount || 0,
       totalBudget: input.totalBudget || 0,
-      currency: input.currency || "USD",
+      currency: input.currency || "INR",
     });
 
     const eventId = event.id;
@@ -159,7 +159,7 @@ export async function persistAcceptedBlueprintAction(
         category: v.category,
         quoted_amount: v.estimatedCostRange.max,
         status: "inquiry" as const,
-        notes: `${v.notes} [Estimated range: $${v.estimatedCostRange.min} - $${v.estimatedCostRange.max}]`,
+        notes: `${v.notes} [Estimated range: ₹${v.estimatedCostRange.min} - ₹${v.estimatedCostRange.max}]`,
       }));
 
       await supabase.from("vendors").insert(vendorInserts);

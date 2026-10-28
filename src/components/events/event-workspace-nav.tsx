@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  DollarSign,
+  IndianRupee,
   CalendarCheck,
   AlertTriangle,
   Palette,
@@ -32,7 +32,7 @@ export function EventWorkspaceNav({ eventId }: WorkspaceNavProps) {
       name: "Budget",
       href: `/events/${eventId}/budget`,
       exact: false,
-      icon: DollarSign,
+      icon: IndianRupee,
     },
     {
       name: "Timeline",

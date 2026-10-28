@@ -12,7 +12,7 @@ describe("Events DAL Schemas and Validation", () => {
       description: "50th wedding anniversary celebration",
       guestCount: 150,
       totalBudget: 45000,
-      currency: "USD",
+      currency: "INR",
       location: "San Francisco City Hall",
     };
 
@@ -21,7 +21,7 @@ describe("Events DAL Schemas and Validation", () => {
     if (result.success) {
       expect(result.data.title).toBe("Golden Jubilee Anniversary");
       expect(result.data.guestCount).toBe(150);
-      expect(result.data.currency).toBe("USD");
+      expect(result.data.currency).toBe("INR");
     }
   });
 
@@ -36,7 +36,7 @@ describe("Events DAL Schemas and Validation", () => {
     if (result.success) {
       expect(result.data.guestCount).toBe(0);
       expect(result.data.totalBudget).toBe(0);
-      expect(result.data.currency).toBe("USD");
+      expect(result.data.currency).toBe("INR");
     }
   });
 

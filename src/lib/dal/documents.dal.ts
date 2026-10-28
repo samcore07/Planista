@@ -193,7 +193,7 @@ export class DocumentsDAL {
           isOverCategoryBudget = true;
           categoryOverageAmount = projectedTotal - allocated;
           warnings.push(
-            `Adding this expense of $${extracted.amount.toFixed(2)} will exceed category "${category.name}" allocated cap by $${categoryOverageAmount.toFixed(2)}.`
+            `Adding this expense of ₹${extracted.amount.toFixed(2)} will exceed category "${category.name}" allocated cap by ₹${categoryOverageAmount.toFixed(2)}.`
           );
         }
       }
@@ -211,7 +211,7 @@ export class DocumentsDAL {
       isPossibleDuplicate = true;
       matchingExpenseTitle = duplicate.title;
       warnings.push(
-        `Possible duplicate detected: An existing expense "${duplicate.title}" for $${Number(duplicate.actual_amount).toFixed(2)} is already recorded.`
+        `Possible duplicate detected: An existing expense "${duplicate.title}" for ₹${Number(duplicate.actual_amount).toFixed(2)} is already recorded.`
       );
     }
 

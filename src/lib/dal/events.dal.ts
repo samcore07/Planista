@@ -12,7 +12,7 @@ export const createEventInputSchema = z.object({
   location: z.string().optional(),
   guestCount: z.number().int().min(0).default(0),
   totalBudget: z.number().min(0).default(0),
-  currency: z.string().length(3).default("USD"),
+  currency: z.string().length(3).default("INR"),
 });
 
 export const updateEventInputSchema = createEventInputSchema.partial().extend({

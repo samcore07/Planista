@@ -61,11 +61,11 @@ export class RiskService {
         title: "Total Budget Overrun Detected",
         severity: "critical",
         category: "budget",
-        explanation: `Actual event expenses have exceeded total planned budget by $${budgetMetrics.overspendAmount.toFixed(2)}.`,
+        explanation: `Actual event expenses have exceeded total planned budget by ₹${budgetMetrics.overspendAmount.toFixed(2)}.`,
         supportingFacts: [
-          `Total Budget: $${budgetMetrics.totalBudget.toFixed(2)}`,
-          `Actual Committed Expenses: $${budgetMetrics.totalActual.toFixed(2)}`,
-          `Overspend Amount: $${budgetMetrics.overspendAmount.toFixed(2)}`,
+          `Total Budget: ₹${budgetMetrics.totalBudget.toFixed(2)}`,
+          `Actual Committed Expenses: ₹${budgetMetrics.totalActual.toFixed(2)}`,
+          `Overspend Amount: ₹${budgetMetrics.overspendAmount.toFixed(2)}`,
         ],
         mitigationAction:
           "Review category line items with overages or negotiate lower vendor quote terms to bring total expenses within the authorized cap.",
@@ -83,10 +83,10 @@ export class RiskService {
           title: `Category Budget Exceeded: ${cat.categoryName}`,
           severity: "high",
           category: "budget",
-          explanation: `Expenses for "${cat.categoryName}" exceed the allocated budget by $${Math.abs(cat.varianceAmount).toFixed(2)} (${cat.percentUtilized.toFixed(0)}% utilized).`,
+          explanation: `Expenses for "${cat.categoryName}" exceed the allocated budget by ₹${Math.abs(cat.varianceAmount).toFixed(2)} (${cat.percentUtilized.toFixed(0)}% utilized).`,
           supportingFacts: [
-            `Allocated: $${cat.allocatedAmount.toFixed(2)}`,
-            `Actual: $${cat.actualAmount.toFixed(2)}`,
+            `Allocated: ₹${cat.allocatedAmount.toFixed(2)}`,
+            `Actual: ₹${cat.actualAmount.toFixed(2)}`,
           ],
           mitigationAction: `Reallocate surplus funds from an under-utilized category or reduce non-essential scope in ${cat.categoryName}.`,
           affectedResources: [cat.categoryName],
@@ -201,12 +201,12 @@ export class RiskService {
       );
       risks.push({
         eventId,
-        title: `Upcoming Payment Deadline: $${totalUrgent.toFixed(2)} Due Within 7 Days`,
+        title: `Upcoming Payment Deadline: ₹${totalUrgent.toFixed(2)} Due Within 7 Days`,
         severity: "high",
         category: "payment",
         explanation: `${urgentPayments.length} vendor expense(s) have impending payment milestones within the next 7 days.`,
         supportingFacts: urgentPayments.map(
-          (p) => `${p.title}: $${(p.actualAmount - p.depositPaid).toFixed(2)} due on ${p.dueDate}`
+          (p) => `${p.title}: ₹${(p.actualAmount - p.depositPaid).toFixed(2)} due on ${p.dueDate}`
         ),
         mitigationAction:
           "Verify funds availability and initiate vendor deposits/disbursements prior to the deadline to avoid service cancellation.",

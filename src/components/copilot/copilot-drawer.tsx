@@ -69,7 +69,7 @@ export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps) {
   };
 
   const quickPrompts = [
-    "Reduce floral & decor budget by $1,500",
+    "Reduce floral & decor budget by ₹15,000",
     "Add inclement weather backup plan",
     "Reschedule delayed milestone by 5 days",
     "Check category overspend warnings",

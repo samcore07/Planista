@@ -61,7 +61,7 @@ export function SavingsSuggestions({ proposals, currency }: SavingsSuggestionsPr
                 <div className="text-right shrink-0">
                   <span className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                     <TrendingDown className="h-3.5 w-3.5" />
-                    -${prop.potentialSavings.toLocaleString()} {currency}
+                    -₹{prop.potentialSavings.toLocaleString()} {currency === "INR" ? "" : currency}
                   </span>
                   <span className="text-[10px] text-muted-foreground">Est. Savings</span>
                 </div>

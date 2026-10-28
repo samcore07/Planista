@@ -5,7 +5,7 @@ import {
   Calendar,
   MapPin,
   Users,
-  DollarSign,
+  IndianRupee,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
@@ -166,11 +166,11 @@ async function EventOverviewContent({ params }: EventPageProps) {
 
         <div className="space-y-1">
           <span className="text-muted-foreground flex items-center gap-1.5">
-            <DollarSign className="h-3.5 w-3.5 text-primary" />
+            <IndianRupee className="h-3.5 w-3.5 text-primary" />
             Cost Per Guest
           </span>
           <p className="font-medium text-foreground">
-            ${budgetMetrics.costPerGuest.toFixed(2)} {event.currency}
+            ₹{budgetMetrics.costPerGuest.toFixed(2)} {event.currency === "INR" ? "" : event.currency}
           </p>
         </div>
       </div>
@@ -183,15 +183,15 @@ async function EventOverviewContent({ params }: EventPageProps) {
             <CardTitle className="text-xs font-medium text-muted-foreground">
               Budget Status
             </CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+            <IndianRupee className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
               <div className="text-2xl font-bold tracking-tight text-foreground">
-                ${budgetMetrics.totalActual.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                ₹{budgetMetrics.totalActual.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
               <p className="text-[11px] text-muted-foreground mt-0.5">
-                of ${budgetMetrics.totalBudget.toLocaleString("en-US", { minimumFractionDigits: 2 })} {event.currency} cap
+                of ₹{budgetMetrics.totalBudget.toLocaleString("en-IN", { minimumFractionDigits: 2 })} {event.currency} cap
               </p>
             </div>
             <Progress value={budgetProgress} className="h-1.5" />
@@ -199,8 +199,8 @@ async function EventOverviewContent({ params }: EventPageProps) {
               <span>{budgetProgress}% committed</span>
               <span className={budgetMetrics.isOverBudget ? "text-destructive font-medium" : "text-emerald-700 font-medium"}>
                 {budgetMetrics.isOverBudget
-                  ? `+$${budgetMetrics.overspendAmount.toFixed(2)} Over`
-                  : `$${budgetMetrics.remainingUnspent.toFixed(2)} remaining`}
+                  ? `+₹${budgetMetrics.overspendAmount.toFixed(2)} Over`
+                  : `₹${budgetMetrics.remainingUnspent.toFixed(2)} remaining`}
               </span>
             </div>
           </CardContent>
@@ -275,7 +275,7 @@ async function EventOverviewContent({ params }: EventPageProps) {
           >
             <div className="flex items-center justify-between mb-2">
               <div className="h-8 w-8 rounded-md bg-secondary flex items-center justify-center text-primary">
-                <DollarSign className="h-4 w-4" />
+                <IndianRupee className="h-4 w-4" />
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
             </div>

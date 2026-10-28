@@ -30,7 +30,7 @@ describe("RiskService & Radar Engine", () => {
     const budgetOverrun = risks.find((r) => r.category === "budget" && r.severity === "critical");
 
     expect(budgetOverrun).toBeDefined();
-    expect(budgetOverrun?.explanation).toContain("$5000.00");
+    expect(budgetOverrun?.explanation).toContain("₹5000.00");
   });
 
   it("identifies missing critical venue vendor", () => {
@@ -80,7 +80,7 @@ describe("RiskService & Radar Engine", () => {
 
     expect(paymentRisk).toBeDefined();
     expect(paymentRisk?.severity).toBe("high");
-    expect(paymentRisk?.supportingFacts[0]).toContain("$3000.00 due on 2026-10-30");
+    expect(paymentRisk?.supportingFacts[0]).toContain("₹3000.00 due on 2026-10-30");
   });
 
   it("identifies missing contingency reserve allocation and tags source as deterministic", () => {

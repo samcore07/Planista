@@ -893,7 +893,7 @@ Inspect the uploaded receipt, invoice, or vendor quote and extract all financial
   "date": string, // Date on the document in YYYY-MM-DD format (e.g. "2030-01-15")
   "suggestedCategory": string, // One of: "Venue & Rentals", "Catering & Bar", "Photography & Video", "Floral & Decor", "Music & Entertainment", "Stationery & Favors", "Other"
   "documentType": string, // "invoice", "receipt", "quote", or "contract"
-  "lineItems": string[], // Itemized descriptions and amounts (e.g. ["Appetizers: $1,500", "Main Course: $5,000", "Desserts: $800", "Tax: $584", "Service Charge: $500"])
+  "lineItems": string[], // Itemized descriptions and amounts (e.g. ["Appetizers: ₹1,500", "Main Course: ₹5,000", "Desserts: ₹800", "Tax: ₹584", "Service Charge: ₹500"])
   "uncertainties": string[] // Only note genuine ambiguities. If fields are clearly legible, return empty array []
 }
 
@@ -943,7 +943,7 @@ Rules:
       const cleaned = cleanJsonString(content);
       const parsed = JSON.parse(cleaned);
       const normalized = normalizeDocumentExtraction(parsed, params.fileName);
-      console.log(`[GroqClient] Successfully extracted document using ${visionModel}: "${normalized.vendorName}" $${normalized.amount}`);
+      console.log(`[GroqClient] Successfully extracted document using ${visionModel}: "${normalized.vendorName}" ₹${normalized.amount}`);
       return normalized;
     } catch (err) {
       console.error("[GroqClient] extractDocumentVision exception:", err);

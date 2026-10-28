@@ -37,7 +37,7 @@ export function ArchitectIntakeForm() {
       location: (formData.get("location") as string) || undefined,
       guestCount: Number(formData.get("guestCount") || 100),
       totalBudget: Number(formData.get("totalBudget") || 25000),
-      currency: (formData.get("currency") as string) || "USD",
+      currency: (formData.get("currency") as string) || "INR",
       preferences: (formData.get("preferences") as string) || undefined,
       dietaryOrAccessibility: (formData.get("dietaryOrAccessibility") as string) || undefined,
       constraints: (formData.get("constraints") as string) || undefined,
@@ -178,7 +178,7 @@ export function ArchitectIntakeForm() {
                 <Input
                   id="currency"
                   name="currency"
-                  defaultValue="USD"
+                  defaultValue="INR"
                   maxLength={3}
                   required
                 />

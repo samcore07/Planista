@@ -60,7 +60,7 @@ export function CategoryModal({ eventId }: CategoryModalProps) {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="allocatedAmount">Allocated Budget Cap ($)</Label>
+                <Label htmlFor="allocatedAmount">Allocated Budget Cap (INR)</Label>
                 <Input
                   id="allocatedAmount"
                   name="allocatedAmount"

@@ -18,7 +18,7 @@ import {
   FileText,
   Calendar,
   Users,
-  DollarSign,
+  IndianRupee,
 } from "lucide-react";
 
 export const instant = false;
@@ -128,7 +128,7 @@ export default async function ExportPage({ params }: PageProps) {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-emerald-500" />
+                  <IndianRupee className="h-4 w-4 text-emerald-500" />
                   Budget & Expenses
                 </CardTitle>
                 <CardDescription className="text-xs">

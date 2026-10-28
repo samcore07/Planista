@@ -13,7 +13,7 @@ export async function createEventAction(formData: FormData): Promise<void> {
   const location = (formData.get("location") as string) || undefined;
   const guestCount = Number(formData.get("guestCount") || 0);
   const totalBudget = Number(formData.get("totalBudget") || 0);
-  const currency = (formData.get("currency") as string) || "USD";
+  const currency = (formData.get("currency") as string) || "INR";
 
   const parsed = createEventInputSchema.safeParse({
     title,

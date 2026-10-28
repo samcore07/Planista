@@ -248,7 +248,7 @@ export class BudgetDAL {
           category: cat.name,
           title: `Contain Overage in ${cat.name}`,
           potentialSavings: overage,
-          recommendation: `Category is currently over budget by $${overage.toLocaleString()}. Review discretionary add-ons or negotiate vendor scope adjustments before final sign-off.`,
+          recommendation: `Category is currently over budget by ₹${overage.toLocaleString()}. Review discretionary add-ons or negotiate vendor scope adjustments before final sign-off.`,
           tradeOffs: [
             "Requires scope concession with vendor",
             "Prevents cascading overall budget deficit",

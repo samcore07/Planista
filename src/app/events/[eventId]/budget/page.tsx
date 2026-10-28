@@ -124,10 +124,10 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
           </CardHeader>
           <CardContent className="pb-4">
             <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              ${budgetMetrics.totalBudget.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              ₹{budgetMetrics.totalBudget.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              ${budgetMetrics.costPerGuest.toFixed(2)} / guest ({event.guest_count} guests)
+              ₹{budgetMetrics.costPerGuest.toFixed(2)} / guest ({event.guest_count} guests)
             </p>
           </CardContent>
         </Card>
@@ -140,10 +140,10 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
           </CardHeader>
           <CardContent className="pb-4">
             <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              ${budgetMetrics.totalActual.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              ₹{budgetMetrics.totalActual.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              ${budgetMetrics.totalEstimated.toLocaleString("en-US", { minimumFractionDigits: 2 })} initial estimates
+              ₹{budgetMetrics.totalEstimated.toLocaleString("en-IN", { minimumFractionDigits: 2 })} initial estimates
             </p>
           </CardContent>
         </Card>
@@ -160,11 +160,11 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
                 budgetMetrics.isOverBudget ? "text-destructive" : "text-emerald-700 dark:text-emerald-400"
               }`}
             >
-              ${budgetMetrics.remainingUnspent.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              ₹{budgetMetrics.remainingUnspent.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
               {budgetMetrics.isOverBudget
-                ? `+$${budgetMetrics.overspendAmount.toFixed(2)} forecast deficit`
+                ? `+₹${budgetMetrics.overspendAmount.toFixed(2)} forecast deficit`
                 : "Safe contingency buffer"}
             </p>
           </CardContent>
@@ -178,10 +178,10 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
           </CardHeader>
           <CardContent className="pb-4">
             <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              ${budgetMetrics.outstandingBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              ₹{budgetMetrics.outstandingBalance.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              ${budgetMetrics.totalDepositsPaid.toLocaleString("en-US", { minimumFractionDigits: 2 })} deposits paid
+              ₹{budgetMetrics.totalDepositsPaid.toLocaleString("en-IN", { minimumFractionDigits: 2 })} deposits paid
             </p>
           </CardContent>
         </Card>
@@ -233,17 +233,17 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
                           {cat.categoryName}
                         </td>
                         <td className="py-3 px-3">
-                          ${cat.allocatedAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          ₹{cat.allocatedAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-3 font-medium">
-                          ${cat.actualAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          ₹{cat.actualAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
                         <td
                           className={`py-3 px-3 font-medium ${
                             cat.isOverBudget ? "text-destructive" : "text-emerald-700 dark:text-emerald-400"
                           }`}
                         >
-                          ${cat.remainingAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          ₹{cat.remainingAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-3 w-40">
                           <div className="space-y-1">
@@ -334,10 +334,10 @@ async function BudgetPageContent({ params, searchParams }: BudgetPageProps) {
                           {exp.category_id ? categoryMap.get(exp.category_id) || "Category" : "Uncategorized"}
                         </td>
                         <td className="py-3 px-3 font-semibold text-foreground">
-                          ${Number(exp.actual_amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          ₹{Number(exp.actual_amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-3 text-muted-foreground">
-                          ${Number(exp.deposit_paid).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          ₹{Number(exp.deposit_paid).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-3 text-muted-foreground">
                           {exp.due_date ? (

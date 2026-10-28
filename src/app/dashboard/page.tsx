@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import {
   Calendar,
-  DollarSign,
+  IndianRupee,
   Plus,
   LogOut,
   User,
@@ -144,14 +144,14 @@ async function DashboardContent() {
               <CardTitle className="text-xs font-medium text-muted-foreground">
                 Allocated Capital
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-primary" />
+              <IndianRupee className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold tracking-tight text-foreground">
-                ${metrics.totalBudget.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                ₹{metrics.totalBudget.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
               </div>
               <p className="text-[11px] text-muted-foreground mt-1">
-                ${metrics.totalSpent.toLocaleString("en-US", { minimumFractionDigits: 2 })} committed expenses
+                ₹{metrics.totalSpent.toLocaleString("en-IN", { minimumFractionDigits: 2 })} committed expenses
               </p>
             </CardContent>
           </Card>
@@ -273,7 +273,7 @@ async function DashboardContent() {
                           <div className="flex justify-between text-[11px]">
                             <span className="text-muted-foreground">Budget</span>
                             <span className="font-medium text-foreground">
-                              ${evt.spentAmount.toFixed(0)} / ${Number(evt.total_budget).toFixed(0)} {evt.currency}
+                              ₹{evt.spentAmount.toFixed(0)} / ₹{Number(evt.total_budget).toFixed(0)} {evt.currency}
                             </span>
                           </div>
                           <Progress value={percentSpent} className="h-1.5" />

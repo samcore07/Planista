@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   Sparkles,
   Calendar,
-  DollarSign,
+  IndianRupee,
   CheckCircle2,
   Palette,
   ShieldAlert,
@@ -34,7 +34,7 @@ export default function Home() {
       badge: "Core Engine",
     },
     {
-      icon: DollarSign,
+      icon: IndianRupee,
       title: "Live Budget Intelligence",
       desc: "Deterministic, decimal-safe financial calculations. Real-time planned vs. actual tracking, per-guest math, and variance warnings.",
       badge: "Financial Engine",
@@ -149,7 +149,7 @@ export default function Home() {
       subtitle: "Real expenses, discrepancy warnings, and quote OCR",
       desc: "Upload vendor quotes and receipts in PDF or image format. The scanner extracts line items, compares amounts against category budget allocations, and highlights discrepancies or possible duplicates before you confirm.",
       deliverable: "Verified expense ledger, payment schedule tracking, and deposit balance alerts",
-      icon: DollarSign,
+      icon: IndianRupee,
       color: "text-blue-500",
     },
     {
@@ -254,10 +254,10 @@ export default function Home() {
               <div className="rounded-lg bg-secondary/50 p-4 border border-border/60">
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                   <span>Planned Budget</span>
-                  <DollarSign className="h-4 w-4 text-primary" />
+                  <IndianRupee className="h-4 w-4 text-primary" />
                 </div>
                 <div className="text-2xl font-semibold tracking-tight text-foreground">
-                  $45,000.00
+                  ₹45,000.00
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Allocated across 8 core categories
@@ -270,7 +270,7 @@ export default function Home() {
                   <Compass className="h-4 w-4 text-primary" />
                 </div>
                 <div className="text-2xl font-semibold tracking-tight text-foreground">
-                  $250.00
+                  ₹250.00
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Dynamic calculation based on guest count

@@ -126,7 +126,7 @@ async function NewEventContent({ searchParams }: NewEventPageProps) {
                   <Input
                     id="currency"
                     name="currency"
-                    defaultValue="USD"
+                    defaultValue="INR"
                     maxLength={3}
                   />
                 </div>

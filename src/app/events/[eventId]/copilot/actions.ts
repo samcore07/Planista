@@ -82,9 +82,9 @@ export async function sendCopilotMessageAction(
     if (lower.includes("reduce") || lower.includes("cheaper decor") || lower.includes("cut budget")) {
       proposal = {
         actionType: "optimize_category",
-        summary: "Reduce floral & decor budget by $1,500 and substitute imported stems",
+        summary: "Reduce floral & decor budget by ₹15,000 and substitute imported stems",
         explanation:
-          "Proposing a $1,500 budget reduction in Floral & Decor by shifting to seasonal local foliage and pillar candles.",
+          "Proposing a ₹15,000 budget reduction in Floral & Decor by shifting to seasonal local foliage and pillar candles.",
         financialImpact: {
           category: "Floral & Decor",
           amountDelta: -1500,
