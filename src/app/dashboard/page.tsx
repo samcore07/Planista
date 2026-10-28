@@ -23,6 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { signOut } from "@/app/auth/actions";
 import { EventsDAL } from "@/lib/dal/events.dal";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 async function DashboardContent() {
   await connection();
@@ -64,7 +65,8 @@ async function DashboardContent() {
             </Badge>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <ThemeToggle />
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <User className="h-3.5 w-3.5" />
               <span className="font-medium text-foreground">{userName}</span>

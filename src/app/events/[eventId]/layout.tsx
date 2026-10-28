@@ -10,6 +10,7 @@ import { CopilotDAL } from "@/lib/dal/copilot.dal";
 import { EventSwitcher } from "@/components/events/event-switcher";
 import { EventWorkspaceNav } from "@/components/events/event-workspace-nav";
 import { CopilotDrawer } from "@/components/copilot/copilot-drawer";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export const instant = false;
 
@@ -67,7 +68,8 @@ async function EventLayoutInner({
             <EventSwitcher currentEvent={currentEvent} allEvents={allEvents} />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
               <User className="h-3.5 w-3.5" />
               <span>{userName}</span>

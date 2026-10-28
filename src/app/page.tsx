@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ShowcaseNav } from "@/components/home/showcase-nav";
 import { HeaderAuthButtons, CtaAuthButton } from "@/components/home/header-auth-buttons";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export default function Home() {
   const capabilities = [
@@ -193,7 +194,10 @@ export default function Home() {
 
           <ShowcaseNav />
 
-          <HeaderAuthButtons />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
+            <HeaderAuthButtons />
+          </div>
         </div>
       </header>
 

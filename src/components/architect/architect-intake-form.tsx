@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function ArchitectIntakeForm() {
   const [isLoading, setIsLoading] = React.useState(false);
@@ -76,10 +77,13 @@ export function ArchitectIntakeForm() {
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Overview
         </Link>
-        <span className="text-xs text-muted-foreground flex items-center gap-1">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          Deterministic & LLM Hybrid Provider
-        </span>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            Deterministic & LLM Hybrid Provider
+          </span>
+        </div>
       </div>
 
       {error && (

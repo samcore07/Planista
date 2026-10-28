@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createEventAction } from "@/app/events/actions";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export const instant = false;
 
@@ -30,12 +31,15 @@ async function NewEventContent({ searchParams }: NewEventPageProps) {
             Back to Dashboard
           </Link>
 
-          <Link href="/events/architect">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Use AI Event Architect
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/events/architect">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                Use AI Event Architect
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {errorMessage && (
