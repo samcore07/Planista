@@ -15,22 +15,17 @@ const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined
 
 const STORAGE_KEY = "planista-theme";
 
-function getSystemTheme(): "light" | "dark" {
-  if (typeof window === "undefined") return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
 function getStoredTheme(): Theme {
-  if (typeof window === "undefined") return "system";
+  if (typeof window === "undefined") return "light";
   try {
     const val = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    if (val === "light" || val === "dark" || val === "system") {
+    if (val === "light" || val === "dark") {
       return val;
     }
   } catch {
     // Ignore access errors
   }
-  return "system";
+  return "light";
 }
 
 function subscribeToTheme(callback: () => void) {
@@ -58,11 +53,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = React.useSyncExternalStore(
     subscribeToTheme,
     getStoredTheme,
-    () => "system" as Theme
+    () => "light" as Theme
   );
 
   const resolvedTheme: "light" | "dark" =
-    theme === "system" ? getSystemTheme() : theme;
+    theme === "dark" ? "dark" : "light";
 
   React.useEffect(() => {
     const root = document.documentElement;

@@ -49,14 +49,41 @@ describe("ThemeProvider & ThemeToggle", () => {
     vi.restoreAllMocks();
   });
 
-  it("defaults to system (resolving light if matchMedia is false)", () => {
+  it("defaults to light theme when opening for the first time", () => {
     render(
       <ThemeProvider>
         <ConsumerComponent />
       </ThemeProvider>
     );
 
-    expect(screen.getByTestId("theme").textContent).toBe("system");
+    expect(screen.getByTestId("theme").textContent).toBe("light");
+    expect(screen.getByTestId("resolved").textContent).toBe("light");
+    expect(document.documentElement.classList.contains("dark")).toBe(false);
+  });
+
+  it("defaults to light mode even if operating system prefers dark", () => {
+    // Simulate OS preference for dark mode
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query) => ({
+        matches: true,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+
+    render(
+      <ThemeProvider>
+        <ConsumerComponent />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId("theme").textContent).toBe("light");
     expect(screen.getByTestId("resolved").textContent).toBe("light");
     expect(document.documentElement.classList.contains("dark")).toBe(false);
   });
