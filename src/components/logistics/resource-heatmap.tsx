@@ -121,9 +121,10 @@ export function ResourceHeatmapComponent({ heatmap }: ResourceHeatmapProps) {
                       <button
                         type="button"
                         key={cell.phaseId}
+                        aria-label={`${cell.category} ${cell.phaseId}: ${hasTasks ? `${cell.totalHours} hours, ${cell.taskCount} tasks` : "idle"}`}
                         onClick={() => setSelectedCell(hasTasks ? cell : null)}
                         className={cn(
-                          "relative h-14 rounded-xl border p-2 flex flex-col justify-between items-center transition-all duration-200 cursor-pointer text-left",
+                          "relative h-14 rounded-xl border p-2 flex flex-col justify-between items-center transition-all duration-200 cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                           cellBg,
                           hasTasks && "hover:scale-105 hover:z-10 hover:shadow-lg",
                           isSelected && "ring-2 ring-primary border-primary scale-105 z-20 shadow-xl"

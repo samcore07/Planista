@@ -80,7 +80,10 @@ export function EventWorkspaceNav({ eventId }: WorkspaceNavProps) {
   ];
 
   return (
-    <nav className="flex items-center space-x-1 overflow-x-auto border-b border-border bg-card px-4 sm:px-6 lg:px-8 py-1.5 scrollbar-none">
+    <nav
+      aria-label="Event workspace navigation"
+      className="flex items-center space-x-1 overflow-x-auto border-b border-border bg-card px-3 sm:px-6 lg:px-8 py-2 scrollbar-none scroll-smooth"
+    >
       {navItems.map((item) => {
         const isActive = item.exact
           ? pathname === item.href
@@ -93,15 +96,16 @@ export function EventWorkspaceNav({ eventId }: WorkspaceNavProps) {
             key={item.href}
             href={item.href}
             prefetch={true}
+            aria-current={isActive ? "page" : undefined}
             className={cn(
-              "flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+              "flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
               isActive
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             )}
           >
-            <Icon className="h-3.5 w-3.5" />
-            {item.name}
+            <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span>{item.name}</span>
           </Link>
         );
       })}

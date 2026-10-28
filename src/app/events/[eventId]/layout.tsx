@@ -79,6 +79,7 @@ async function EventLayoutInner({
                 variant="ghost"
                 size="sm"
                 type="submit"
+                aria-label="Sign out of account"
                 className="gap-1 text-xs text-muted-foreground hover:text-destructive h-8 px-2"
               >
                 <LogOut className="h-3.5 w-3.5" />
@@ -93,7 +94,7 @@ async function EventLayoutInner({
       </header>
 
       {/* Workspace Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 outline-none">
         {children}
       </main>
 

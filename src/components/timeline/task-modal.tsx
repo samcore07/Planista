@@ -19,6 +19,19 @@ export function TaskModal({ eventId, task, trigger }: TaskModalProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const isEditing = !!task;
 
+  // Close on Escape key
+  React.useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   const handleSubmit = (formData: FormData) => {
     setIsOpen(false);
     if (isEditing && task) {
@@ -35,7 +48,20 @@ export function TaskModal({ eventId, task, trigger }: TaskModalProps) {
   return (
     <>
       {trigger ? (
-        <span onClick={() => setIsOpen(true)}>{trigger}</span>
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={() => setIsOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setIsOpen(true);
+            }
+          }}
+          className="cursor-pointer inline-flex"
+        >
+          {trigger}
+        </span>
       ) : (
         <Button size="sm" onClick={() => setIsOpen(true)} className="gap-1.5 text-xs">
           <Plus className="h-3.5 w-3.5" />
@@ -44,19 +70,31 @@ export function TaskModal({ eventId, task, trigger }: TaskModalProps) {
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl animate-in zoom-in-95 duration-150">
+        <div
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="task-modal-title"
+            className="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl animate-in zoom-in-95 duration-150"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
-                <CalendarCheck className="h-4 w-4 text-primary" />
+              <h3 id="task-modal-title" className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
+                <CalendarCheck className="h-4 w-4 text-primary" aria-hidden="true" />
                 {isEditing ? "Edit Checklist Task" : "Create New Task"}
               </h3>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setIsOpen(false)}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 

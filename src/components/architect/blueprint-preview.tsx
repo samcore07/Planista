@@ -143,6 +143,22 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
     },
   });
 
+  // Close any open modal on Escape key
+  React.useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        if (editingOverview) setEditingOverview(false);
+        if (budgetModal.isOpen) setBudgetModal((prev) => ({ ...prev, isOpen: false }));
+        if (taskModal.isOpen) setTaskModal((prev) => ({ ...prev, isOpen: false }));
+        if (themeModal.isOpen) setThemeModal((prev) => ({ ...prev, isOpen: false }));
+        if (colorModal.isOpen) setColorModal((prev) => ({ ...prev, isOpen: false }));
+        if (riskModal.isOpen) setRiskModal((prev) => ({ ...prev, isOpen: false }));
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [editingOverview, budgetModal.isOpen, taskModal.isOpen, themeModal.isOpen, colorModal.isOpen, riskModal.isOpen]);
+
   const toggleSection = (section: keyof typeof selectedSections) => {
     setSelectedSections((prev) => ({
       ...prev,
@@ -1054,18 +1070,28 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
 
       {/* --- MODAL 1: Overview Title & Description --- */}
       {editingOverview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl space-y-4">
+        <div
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingOverview(false); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="overview-modal-title"
+            className="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl space-y-4"
+          >
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-serif text-lg font-semibold text-foreground">
+              <h3 id="overview-modal-title" className="font-serif text-lg font-semibold text-foreground">
                 Edit Event Blueprint Overview
               </h3>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setEditingOverview(false)}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={saveOverview} className="space-y-4 text-xs">
@@ -1103,19 +1129,29 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
 
       {/* --- MODAL 2: Budget Category Modal --- */}
       {budgetModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl space-y-4">
+        <div
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) setBudgetModal((prev) => ({ ...prev, isOpen: false })); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="budget-modal-title"
+            className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl space-y-4"
+          >
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
-                <IndianRupee className="h-4 w-4 text-primary" />
+              <h3 id="budget-modal-title" className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
+                <IndianRupee className="h-4 w-4 text-primary" aria-hidden="true" />
                 {budgetModal.mode === "add" ? "Add Budget Category" : "Edit Budget Category"}
               </h3>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setBudgetModal((prev) => ({ ...prev, isOpen: false }))}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={saveBudgetCategory} className="space-y-4 text-xs">
@@ -1194,19 +1230,29 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
 
       {/* --- MODAL 3: Task Modal --- */}
       {taskModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl space-y-4">
+        <div
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) setTaskModal((prev) => ({ ...prev, isOpen: false })); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="task-modal-title"
+            className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl space-y-4"
+          >
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
+              <h3 id="task-modal-title" className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
                 {taskModal.mode === "add" ? "Add Milestone Task" : "Edit Milestone Task"}
               </h3>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setTaskModal((prev) => ({ ...prev, isOpen: false }))}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={saveTask} className="space-y-3.5 text-xs">
@@ -1348,19 +1394,29 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
 
       {/* --- MODAL 4: Theme Details Modal --- */}
       {themeModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl space-y-4">
+        <div
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) setThemeModal((prev) => ({ ...prev, isOpen: false })); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="theme-modal-title"
+            className="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl space-y-4"
+          >
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
-                <Palette className="h-4 w-4 text-primary" />
+              <h3 id="theme-modal-title" className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
+                <Palette className="h-4 w-4 text-primary" aria-hidden="true" />
                 Edit Theme & Styling Direction
               </h3>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setThemeModal((prev) => ({ ...prev, isOpen: false }))}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={saveTheme} className="space-y-3.5 text-xs">
@@ -1454,18 +1510,28 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
 
       {/* --- MODAL 5: Color Swatch Modal --- */}
       {colorModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-xs rounded-xl border border-border bg-card p-5 shadow-xl space-y-4">
+        <div
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) setColorModal((prev) => ({ ...prev, isOpen: false })); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="color-modal-title"
+            className="relative w-full max-w-xs rounded-xl border border-border bg-card p-5 shadow-xl space-y-4"
+          >
             <div className="flex items-center justify-between border-b border-border pb-2.5">
-              <h3 className="font-serif text-base font-semibold text-foreground">
+              <h3 id="color-modal-title" className="font-serif text-base font-semibold text-foreground">
                 {colorModal.mode === "add" ? "Add Color Swatch" : "Edit Color Swatch"}
               </h3>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setColorModal((prev) => ({ ...prev, isOpen: false }))}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={saveColor} className="space-y-3.5 text-xs">
@@ -1534,19 +1600,29 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
 
       {/* --- MODAL 6: Risk / Contingency Modal --- */}
       {riskModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl space-y-4">
+        <div
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) setRiskModal((prev) => ({ ...prev, isOpen: false })); }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="risk-modal-title"
+            className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl space-y-4"
+          >
             <div className="flex items-center justify-between border-b border-border pb-3">
-              <h3 className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
-                <ShieldAlert className="h-4 w-4 text-primary" />
+              <h3 id="risk-modal-title" className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-primary" aria-hidden="true" />
                 {riskModal.mode === "add" ? "Add Contingency Safeguard" : "Edit Safeguard"}
               </h3>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setRiskModal((prev) => ({ ...prev, isOpen: false }))}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={saveRisk} className="space-y-3.5 text-xs">

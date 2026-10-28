@@ -14,6 +14,19 @@ interface CategoryModalProps {
 export function CategoryModal({ eventId }: CategoryModalProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
+  // Close on Escape key
+  React.useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   const handleSubmit = (formData: FormData) => {
     setIsOpen(false);
     createCategoryAction(eventId, formData);
@@ -32,19 +45,31 @@ export function CategoryModal({ eventId }: CategoryModalProps) {
       </Button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl animate-in zoom-in-95 duration-150">
+        <div
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="category-modal-title"
+            className="relative w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl animate-in zoom-in-95 duration-150"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-border">
-              <h3 className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
-                <Layers className="h-4 w-4 text-primary" />
+              <h3 id="category-modal-title" className="font-serif text-lg font-semibold text-foreground flex items-center gap-2">
+                <Layers className="h-4 w-4 text-primary" aria-hidden="true" />
                 Add Budget Category
               </h3>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setIsOpen(false)}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 

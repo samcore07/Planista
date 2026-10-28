@@ -51,12 +51,13 @@ export function CriticalPathAnalyzer({ analysis }: CriticalPathAnalyzerProps) {
         </div>
 
         {/* Filters */}
-        <div className="flex items-center gap-1.5 p-1 rounded-lg border border-border/70 bg-background/50 text-xs">
+        <div className="flex items-center gap-1.5 p-1 rounded-lg border border-border/70 bg-background/50 text-xs" role="group" aria-label="Milestone filter mode">
           <button
             type="button"
+            aria-pressed={filterMode === "all"}
             onClick={() => setFilterMode("all")}
             className={cn(
-              "px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer",
+              "px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
               filterMode === "all"
                 ? "bg-primary text-primary-foreground shadow-xs"
                 : "text-muted-foreground hover:text-foreground"
@@ -66,9 +67,10 @@ export function CriticalPathAnalyzer({ analysis }: CriticalPathAnalyzerProps) {
           </button>
           <button
             type="button"
+            aria-pressed={filterMode === "critical"}
             onClick={() => setFilterMode("critical")}
             className={cn(
-              "px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer",
+              "px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
               filterMode === "critical"
                 ? "bg-rose-500 text-white shadow-xs"
                 : "text-muted-foreground hover:text-foreground"
@@ -78,9 +80,10 @@ export function CriticalPathAnalyzer({ analysis }: CriticalPathAnalyzerProps) {
           </button>
           <button
             type="button"
+            aria-pressed={filterMode === "buffered"}
             onClick={() => setFilterMode("buffered")}
             className={cn(
-              "px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer",
+              "px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
               filterMode === "buffered"
                 ? "bg-emerald-600 text-white shadow-xs"
                 : "text-muted-foreground hover:text-foreground"

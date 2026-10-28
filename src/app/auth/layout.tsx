@@ -26,9 +26,9 @@ export default function AuthLayout({
       </header>
 
       {/* Auth Content */}
-      <div className="flex-1 flex flex-col">
+      <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col outline-none">
         {children}
-      </div>
+      </main>
     </div>
   );
 }

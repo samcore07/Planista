@@ -203,7 +203,7 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
         <section className="relative overflow-hidden pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="flex flex-col items-center text-center space-y-6 max-w-3xl mx-auto">
             <Badge variant="outline" className="px-3 py-1 gap-1.5 border-border/80 bg-secondary/40 text-foreground">

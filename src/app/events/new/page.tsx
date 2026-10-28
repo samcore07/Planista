@@ -20,7 +20,7 @@ async function NewEventContent({ searchParams }: NewEventPageProps) {
   const errorMessage = typeof resolvedSearchParams.error === "string" ? resolvedSearchParams.error : null;
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+    <main id="main-content" tabIndex={-1} className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8 outline-none">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <Link
@@ -160,7 +160,7 @@ async function NewEventContent({ searchParams }: NewEventPageProps) {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </main>
   );
 }
 

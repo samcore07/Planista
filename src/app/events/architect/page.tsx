@@ -14,9 +14,9 @@ async function ArchitectPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+    <main id="main-content" tabIndex={-1} className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8 outline-none">
       <ArchitectIntakeForm />
-    </div>
+    </main>
   );
 }
 

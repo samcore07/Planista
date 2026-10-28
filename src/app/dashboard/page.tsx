@@ -67,19 +67,20 @@ async function DashboardContent() {
 
           <div className="flex items-center gap-3 sm:gap-4">
             <ThemeToggle />
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <User className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">{userName}</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground">
+              <User className="h-3.5 w-3.5 shrink-0" />
+              <span className="font-medium text-foreground max-w-[100px] sm:max-w-none truncate">{userName}</span>
             </div>
             <form action={signOut}>
               <Button
                 variant="ghost"
                 size="sm"
                 type="submit"
-                className="gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+                aria-label="Sign out of account"
+                className="gap-1.5 text-xs text-muted-foreground hover:text-destructive h-8 px-2 sm:px-3"
               >
-                <LogOut className="h-3.5 w-3.5" />
-                Sign Out
+                <LogOut className="h-3.5 w-3.5 shrink-0" />
+                <span className="hidden sm:inline">Sign Out</span>
               </Button>
             </form>
           </div>
@@ -87,7 +88,7 @@ async function DashboardContent() {
       </header>
 
       {/* Main Workspace Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main id="main-content" tabIndex={-1} className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 outline-none">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">

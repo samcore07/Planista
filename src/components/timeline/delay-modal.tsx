@@ -27,6 +27,19 @@ export function DelayModal({
   const [delayDays, setDelayDays] = React.useState(7);
   const [isApplying, setIsApplying] = React.useState(false);
 
+  // Close on Escape key
+  React.useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
+    }
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   // Convert to domain items for propagation service
   const taskItems = React.useMemo(
     () =>
@@ -70,7 +83,20 @@ export function DelayModal({
   return (
     <>
       {trigger ? (
-        <span onClick={() => setIsOpen(true)}>{trigger}</span>
+        <span
+          role="button"
+          tabIndex={0}
+          onClick={() => setIsOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setIsOpen(true);
+            }
+          }}
+          className="cursor-pointer inline-flex"
+        >
+          {trigger}
+        </span>
       ) : (
         <Button
           variant="outline"
@@ -84,21 +110,33 @@ export function DelayModal({
       )}
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50">
-          <div className="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl animate-in zoom-in-95 duration-150 space-y-4">
+        <div
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delay-modal-title"
+            className="relative w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl animate-in zoom-in-95 duration-150 space-y-4"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
-                <h3 className="font-serif text-base font-semibold text-foreground">
+                <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
+                <h3 id="delay-modal-title" className="font-serif text-base font-semibold text-foreground">
                   Adaptive Schedule Shift & Impact Preview
                 </h3>
               </div>
               <button
                 type="button"
+                aria-label="Close dialog"
                 onClick={() => setIsOpen(false)}
-                className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary"
+                className="rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 

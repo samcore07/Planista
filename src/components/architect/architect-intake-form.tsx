@@ -87,8 +87,8 @@ export function ArchitectIntakeForm() {
       </div>
 
       {error && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3.5 flex items-center gap-2 text-xs text-destructive">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+        <div role="alert" aria-live="assertive" className="rounded-md border border-destructive/30 bg-destructive/10 p-3.5 flex items-center gap-2 text-xs text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}

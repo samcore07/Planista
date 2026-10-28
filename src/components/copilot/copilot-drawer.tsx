@@ -27,12 +27,29 @@ export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps) {
   const [isSending, setIsSending] = React.useState(false);
   const [applyingId, setApplyingId] = React.useState<string | null>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current?.scrollIntoView?.({ behavior: "smooth" });
+      inputRef.current?.focus();
     }
   }, [isOpen, messages]);
+
+  // Global keyboard shortcuts: Cmd+K / Ctrl+K to toggle, Escape to close
+  React.useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setIsOpen((prev) => !prev);
+      } else if (event.key === "Escape" && isOpen) {
+        setIsOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   const handleSend = async (text: string) => {
     const trimmed = text.trim();
@@ -80,28 +97,45 @@ export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps) {
       {/* Floating Trigger Pill */}
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full border border-primary/30 bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 hover:scale-105 transition-all"
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
+        aria-label={isOpen ? "Close Planning Copilot" : "Open Planning Copilot (Press ⌘K or Ctrl+K)"}
+        onClick={() => setIsOpen(!isOpen)}
+        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full border border-primary/30 bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 hover:scale-105 active:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        <Sparkles className="h-4 w-4" />
+        <Sparkles className="h-4 w-4" aria-hidden="true" />
         <span>Planning Copilot</span>
+        <span className="hidden sm:inline-flex rounded border border-primary-foreground/30 px-1 py-0.5 text-[9px] font-mono opacity-80">
+          ⌘K
+        </span>
         {messages.some((m) => m.proposal && !m.isApplied) && (
-          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" aria-label="Pending proposal requires review" />
         )}
       </button>
 
       {/* Slide-over Drawer */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in-50">
-          <div className="relative flex h-full w-full max-w-md flex-col border-l border-border bg-card shadow-2xl animate-in slide-in-from-right duration-200">
+        <div
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsOpen(false);
+          }}
+          className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in-50"
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="copilot-drawer-title"
+            className="relative flex h-full w-full max-w-md flex-col border-l border-border bg-card shadow-2xl animate-in slide-in-from-right duration-200"
+          >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border p-4 bg-secondary/30">
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center text-primary">
+                <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center text-primary" aria-hidden="true">
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-sm font-semibold text-foreground">
+                  <h3 id="copilot-drawer-title" className="font-serif text-sm font-semibold text-foreground">
                     Planning Copilot
                   </h3>
                   <span className="text-[10px] text-muted-foreground block">
@@ -111,23 +145,29 @@ export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps) {
               </div>
               <button
                 type="button"
+                aria-label="Close Planning Copilot"
                 onClick={() => setIsOpen(false)}
-                className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
 
             {/* Guard Banner */}
-            <div className="border-b border-border bg-primary/[0.03] p-3 text-[11px] text-muted-foreground flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-emerald-700 shrink-0" />
+            <div className="border-b border-border bg-primary/[0.03] p-3 text-[11px] text-muted-foreground flex items-center gap-2" role="note">
+              <ShieldCheck className="h-4 w-4 text-emerald-700 shrink-0" aria-hidden="true" />
               <span>
                 Suggestions require your approval before applying. No raw SQL or unauthorized mutations executed.
               </span>
             </div>
 
             {/* Conversation Stream */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div
+              role="log"
+              aria-live="polite"
+              aria-atomic="false"
+              className="flex-1 overflow-y-auto p-4 space-y-4"
+            >
               {messages.length === 0 ? (
                 <div className="text-center py-10 space-y-3">
                   <div className="mx-auto h-10 w-10 rounded-full bg-secondary flex items-center justify-center text-primary">
@@ -248,7 +288,9 @@ export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps) {
                 className="flex items-center gap-2"
               >
                 <input
+                  ref={inputRef}
                   type="text"
+                  aria-label="Message Planning Copilot"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Ask copilot to adjust budgets, add tasks..."
@@ -258,10 +300,11 @@ export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps) {
                 <Button
                   size="sm"
                   type="submit"
+                  aria-label="Send message to Planning Copilot"
                   disabled={!inputValue.trim() || isSending}
                   className="h-8 px-3"
                 >
-                  <Send className="h-3.5 w-3.5" />
+                  <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 </Button>
               </form>
             </div>

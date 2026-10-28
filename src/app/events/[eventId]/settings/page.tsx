@@ -61,22 +61,22 @@ async function SettingsContent({ params, searchParams }: SettingsPageProps) {
       </div>
 
       {errorMessage && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 flex items-center gap-2 text-xs text-destructive">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+        <div role="alert" aria-live="assertive" className="rounded-md border border-destructive/30 bg-destructive/10 p-3 flex items-center gap-2 text-xs text-destructive">
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{errorMessage}</span>
         </div>
       )}
 
       {isSaved && (
-        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <div role="status" aria-live="polite" className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
           <span>Event settings successfully updated.</span>
         </div>
       )}
 
       {isRestored && (
-        <div className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        <div role="status" aria-live="polite" className="rounded-lg border border-emerald-300 bg-emerald-50/90 dark:border-emerald-800 dark:bg-emerald-950/50 p-3 text-xs text-emerald-950 dark:text-emerald-100 font-medium flex items-center gap-2.5 shadow-xs">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
           <span>Event successfully restored to active status.</span>
         </div>
       )}

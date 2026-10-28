@@ -109,10 +109,11 @@ export function EventDependencyGraph({ graphData }: EventDependencyGraphProps) {
             <button
               type="button"
               onClick={() => setZoomLevel((z) => Math.max(0.7, z - 0.1))}
-              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               title="Zoom out"
+              aria-label="Zoom out"
             >
-              <ZoomOut className="h-3.5 w-3.5" />
+              <ZoomOut className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
             <span className="text-[11px] font-mono font-medium px-1 text-muted-foreground">
               {Math.round(zoomLevel * 100)}%
@@ -120,18 +121,20 @@ export function EventDependencyGraph({ graphData }: EventDependencyGraphProps) {
             <button
               type="button"
               onClick={() => setZoomLevel((z) => Math.min(1.4, z + 0.1))}
-              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               title="Zoom in"
+              aria-label="Zoom in"
             >
-              <ZoomIn className="h-3.5 w-3.5" />
+              <ZoomIn className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={() => setZoomLevel(1.0)}
-              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors border-l border-border/60 pl-1.5 ml-0.5"
+              className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors border-l border-border/60 pl-1.5 ml-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               title="Reset Zoom"
+              aria-label="Reset zoom"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
+              <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
         </div>
