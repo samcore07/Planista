@@ -1,4 +1,5 @@
 import { env } from "@/config/env";
+import { fetchWithRetryAndTimeout } from "@/lib/reliability/fetch-retry";
 import {
   eventBlueprintSchema,
   EventBlueprint,
@@ -525,9 +526,13 @@ export class GroqClient {
     ];
 
     try {
-      const res = await fetch("https://api.groq.com/openai/v1/models", {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      });
+      const res = await fetchWithRetryAndTimeout(
+        "https://api.groq.com/openai/v1/models",
+        {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        },
+        { timeoutMs: 10000, maxRetries: 2 }
+      );
       if (res.ok) {
         const json = await res.json();
         const availableIds: string[] = (json.data || []).map((m: { id: string }) => m.id);
@@ -643,22 +648,26 @@ CRITICAL RULES:
 - Constraints: ${input.constraints || "Strict budget discipline"}`;
 
     try {
-      const response = await fetch(GROQ_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
+      const response = await fetchWithRetryAndTimeout(
+        GROQ_API_ENDPOINT,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.3,
+          }),
         },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.3,
-        }),
-      });
+        { timeoutMs: 30000, maxRetries: 2 }
+      );
 
       if (!response.ok) {
         const errBody = await response.text();
@@ -756,19 +765,23 @@ Guidelines:
     ];
 
     try {
-      const response = await fetch(GROQ_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
+      const response = await fetchWithRetryAndTimeout(
+        GROQ_API_ENDPOINT,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            response_format: { type: "json_object" },
+            temperature: 0.3,
+          }),
         },
-        body: JSON.stringify({
-          model,
-          messages,
-          response_format: { type: "json_object" },
-          temperature: 0.3,
-        }),
-      });
+        { timeoutMs: 25000, maxRetries: 2 }
+      );
 
       if (!response.ok) {
         const errBody = await response.text();
@@ -822,22 +835,26 @@ Requirements:
 - Return ONLY JSON.`;
 
     try {
-      const response = await fetch(GROQ_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
+      const response = await fetchWithRetryAndTimeout(
+        GROQ_API_ENDPOINT,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: `Event Type: ${eventType}\nTheme Prompt: ${promptText}` },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.5,
+          }),
         },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: `Event Type: ${eventType}\nTheme Prompt: ${promptText}` },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.5,
-        }),
-      });
+        { timeoutMs: 25000, maxRetries: 2 }
+      );
 
       if (!response.ok) {
         const errBody = await response.text();
@@ -880,9 +897,13 @@ Requirements:
     ];
 
     try {
-      const res = await fetch("https://api.groq.com/openai/v1/models", {
-        headers: { Authorization: `Bearer ${apiKey}` },
-      });
+      const res = await fetchWithRetryAndTimeout(
+        "https://api.groq.com/openai/v1/models",
+        {
+          headers: { Authorization: `Bearer ${apiKey}` },
+        },
+        { timeoutMs: 10000, maxRetries: 2 }
+      );
       if (res.ok) {
         const json = await res.json();
         const ids: string[] = (json.data || []).map((m: { id: string }) => m.id);
@@ -933,32 +954,36 @@ Rules:
 - Return ONLY the JSON object.`;
 
     try {
-      const response = await fetch(GROQ_API_ENDPOINT, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: visionModel,
-          messages: [
-            {
-              role: "user",
-              content: [
-                { type: "text", text: systemPrompt },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: `data:${params.mimeType};base64,${params.base64Data}`,
+      const response = await fetchWithRetryAndTimeout(
+        GROQ_API_ENDPOINT,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: visionModel,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: systemPrompt },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${params.mimeType};base64,${params.base64Data}`,
+                    },
                   },
-                },
-              ],
-            },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.1,
-        }),
-      });
+                ],
+              },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.1,
+          }),
+        },
+        { timeoutMs: 35000, maxRetries: 2 }
+      );
 
       if (!response.ok) {
         const errBody = await response.text();

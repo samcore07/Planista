@@ -129,6 +129,22 @@ export function RenderingIndicator() {
     // 4. Intercept fetch to catch Server Actions (e.g. signInWithPassword, Next.js Actions)
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
+      const [input, init] = args;
+      const url = typeof input === "string" ? input : input instanceof Request ? input.url : "";
+
+      // Ignore background router prefetches and telemetry so UI thread remains silky-smooth
+      const isPrefetch =
+        url.includes("_rsc") ||
+        (init &&
+          typeof init === "object" &&
+          (init.headers as Record<string, string>)?.[
+            "next-router-prefetch"
+          ] === "1");
+
+      if (isPrefetch) {
+        return originalFetch(...args);
+      }
+
       activeFetchesRef.current += 1;
       startRendering();
 

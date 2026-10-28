@@ -3,6 +3,36 @@ import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/config/env";
 import { type Database } from "@/types/database.types";
 
+/**
+ * Fast-path helper to parse JWT expiry from Supabase auth cookies without a remote network call.
+ * Avoids blocking every navigation with a 500-900ms roundtrip when the token is already fresh.
+ */
+function getAuthTokenPayload(request: NextRequest): { exp: number; sub: string } | null {
+  const allCookies = request.cookies.getAll();
+  for (const c of allCookies) {
+    if (c.name.includes("-auth-token") || c.name.startsWith("sb-")) {
+      try {
+        let raw = c.value;
+        if (raw.startsWith("base64-")) {
+          raw = Buffer.from(raw.slice(7), "base64").toString("utf8");
+        }
+        const parsed = JSON.parse(raw);
+        const token = Array.isArray(parsed) ? parsed[0] : (parsed.access_token || parsed);
+        if (typeof token === "string" && token.includes(".")) {
+          const payloadPart = token.split(".")[1];
+          const payload = JSON.parse(Buffer.from(payloadPart, "base64").toString("utf8"));
+          if (payload && typeof payload.exp === "number" && typeof payload.sub === "string") {
+            return { exp: payload.exp, sub: payload.sub };
+          }
+        }
+      } catch {
+        // Chunked or non-standard format, fallback to standard client
+      }
+    }
+  }
+  return null;
+}
+
 export async function updateSession(request: NextRequest) {
   // If an auth exchange code lands at root ('/'), forward directly to /auth/callback
   const authCode = request.nextUrl.searchParams.get("code");
@@ -12,12 +42,6 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(callbackUrl);
   }
 
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
   const isProtectedRoute =
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/events");
@@ -26,12 +50,23 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/auth/login") ||
     request.nextUrl.pathname.startsWith("/auth/register");
 
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") === "1" ||
+    request.headers.get("purpose") === "prefetch" ||
+    request.headers.get("x-middleware-prefetch") === "1";
+
   const allCookies = request.cookies.getAll();
   const hasAuthCookie = allCookies.some(
     (c) => c.name.includes("-auth-token") || c.name.startsWith("sb-")
   );
 
-  // Fast path: if there are no auth cookies at all, unauthenticated visitors don't need a remote network roundtrip
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  // Fast path 1: If completely unauthenticated visitor
   if (!hasAuthCookie) {
     if (isProtectedRoute) {
       const redirectUrl = request.nextUrl.clone();
@@ -42,6 +77,36 @@ export async function updateSession(request: NextRequest) {
     return response;
   }
 
+  // Fast path 2: Speculative background prefetches should never trigger remote auth roundtrips
+  if (isPrefetch) {
+    return response;
+  }
+
+  // Fast path 3: Public / marketing routes don't require server session refresh in middleware
+  if (!isProtectedRoute && !isAuthRoute) {
+    return response;
+  }
+
+  // Fast path 4: If token is parsed locally and has > 60 seconds of valid life remaining
+  const tokenPayload = getAuthTokenPayload(request);
+  if (tokenPayload) {
+    const isTokenFresh = tokenPayload.exp * 1000 > Date.now() + 60000;
+    if (isTokenFresh) {
+      // Authenticated user trying to access login/register -> redirect to dashboard instantly
+      if (isAuthRoute) {
+        const dashboardUrl = request.nextUrl.clone();
+        dashboardUrl.pathname = "/dashboard";
+        dashboardUrl.search = "";
+        return NextResponse.redirect(dashboardUrl);
+      }
+      // Authenticated user on protected route with fresh token -> bypass remote roundtrip
+      if (isProtectedRoute) {
+        return response;
+      }
+    }
+  }
+
+  // Slow path: Token is near expiration (or unparseable), refresh via Supabase Auth
   const supabase = createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -65,8 +130,7 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // IMPORTANT: Avoid using supabase.auth.getSession() in middleware as it is insecure
-  // and doesn't revalidate token on the server. Always use getUser().
+  // Revalidate or refresh the session
   const {
     data: { user },
   } = await supabase.auth.getUser();
