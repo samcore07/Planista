@@ -7,6 +7,9 @@ import {
   CheckCircle,
   Trash2,
   Calendar,
+  Clock,
+  GitFork,
+  X,
 } from "lucide-react";
 import { EventsDAL } from "@/lib/dal/events.dal";
 import { TasksDAL, TaskRow } from "@/lib/dal/tasks.dal";
@@ -346,8 +349,11 @@ async function TimelinePageContent({ params, searchParams }: TimelinePageProps) 
 
                           {/* Prerequisites & Dependencies list */}
                           {prereqTasks.length > 0 && (
-                            <div className="pt-2 flex items-center gap-2 text-[11px] flex-wrap">
-                              <span className="text-muted-foreground font-medium">Prerequisites:</span>
+                            <div className="pt-2.5 flex items-center gap-2 text-xs flex-wrap">
+                              <span className="text-muted-foreground font-medium flex items-center gap-1 text-[11px]">
+                                <GitFork className="h-3 w-3 text-muted-foreground" />
+                                Prerequisites:
+                              </span>
                               {prereqTasks.map((prereq) => {
                                 const removeDep = removeDependencyAction.bind(
                                   null,
@@ -355,22 +361,34 @@ async function TimelinePageContent({ params, searchParams }: TimelinePageProps) 
                                   task.id,
                                   prereq.id
                                 );
+                                const isPrereqDone = prereq.status === "completed";
                                 return (
                                   <span
                                     key={prereq.id}
-                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] border ${
-                                      prereq.status === "completed"
-                                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
-                                        : "bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300"
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium border shadow-xs transition-colors ${
+                                      isPrereqDone
+                                        ? "bg-emerald-100/90 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-950 dark:text-emerald-100"
+                                        : "bg-amber-100/90 dark:bg-amber-950/60 border-amber-300 dark:border-amber-700 text-amber-950 dark:text-amber-100"
                                     }`}
                                   >
-                                    {prereq.title}
-                                    <form action={removeDep} className="inline">
+                                    {isPrereqDone ? (
+                                      <CheckCircle2 className="h-3 w-3 text-emerald-700 dark:text-emerald-400 shrink-0" />
+                                    ) : (
+                                      <Clock className="h-3 w-3 text-amber-700 dark:text-amber-400 shrink-0" />
+                                    )}
+                                    <span>{prereq.title}</span>
+                                    <form action={removeDep} className="inline-flex items-center">
                                       <button
                                         type="submit"
-                                        className="hover:text-destructive text-muted-foreground ml-0.5"
+                                        className={`rounded p-0.5 transition-colors ${
+                                          isPrereqDone
+                                            ? "text-emerald-800/70 hover:text-destructive hover:bg-emerald-200/60 dark:hover:bg-emerald-900/60"
+                                            : "text-amber-800/70 hover:text-destructive hover:bg-amber-200/60 dark:hover:bg-amber-900/60"
+                                        }`}
+                                        title={`Remove prerequisite link to "${prereq.title}"`}
                                       >
-                                        ×
+                                        <X className="h-3 w-3" />
+                                        <span className="sr-only">Remove</span>
                                       </button>
                                     </form>
                                   </span>
@@ -423,12 +441,15 @@ async function TimelinePageContent({ params, searchParams }: TimelinePageProps) 
 
                     {/* Add Dependency quick selector */}
                     <div className="mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span>Add prerequisite milestone:</span>
+                      <span className="flex items-center gap-1 font-medium">
+                        <GitFork className="h-3 w-3 text-muted-foreground" />
+                        Add prerequisite milestone:
+                      </span>
                       <form action={addDepWithId} className="flex items-center gap-1.5">
                         <select
                           name="dependsOnTaskId"
                           required
-                          className="h-7 rounded border border-input bg-background px-2 text-[11px]"
+                          className="h-7 rounded-md border border-input bg-background px-2 text-[11px] text-foreground shadow-xs focus:outline-none focus:ring-1 focus:ring-primary"
                         >
                           <option value="">Select prerequisite...</option>
                           {tasks
@@ -439,7 +460,7 @@ async function TimelinePageContent({ params, searchParams }: TimelinePageProps) 
                               </option>
                             ))}
                         </select>
-                        <Button variant="outline" size="sm" type="submit" className="h-7 px-2 text-[11px]">
+                        <Button variant="outline" size="sm" type="submit" className="h-7 px-2.5 text-[11px] font-medium">
                           Link
                         </Button>
                       </form>
