@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { ArrowRight, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
@@ -23,6 +24,7 @@ export function HeaderAuthFallback() {
 }
 
 async function HeaderAuthButtonsContent() {
+  await connection();
   const user = await getAuthenticatedUser();
 
   if (user) {
@@ -61,6 +63,7 @@ export function CtaAuthFallback() {
 }
 
 async function CtaAuthButtonContent() {
+  await connection();
   const user = await getAuthenticatedUser();
 
   if (user) {

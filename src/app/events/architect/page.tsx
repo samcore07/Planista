@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { ArchitectIntakeForm } from "@/components/architect/architect-intake-form";
 
 export const instant = false;
 
 async function ArchitectPageContent() {
+  await connection();
   const user = await getAuthenticatedUser();
   if (!user) {
     redirect("/auth/login?redirectTo=/events/architect");

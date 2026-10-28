@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import {
   Calendar,
   DollarSign,
@@ -24,6 +25,7 @@ import { signOut } from "@/app/auth/actions";
 import { EventsDAL } from "@/lib/dal/events.dal";
 
 async function DashboardContent() {
+  await connection();
   const user = await getAuthenticatedUser();
 
   if (!user) {
