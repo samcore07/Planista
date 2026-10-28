@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Lock, Mail, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,12 +52,17 @@ function GoogleSubmitButton() {
 }
 
 function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirectTo") || "/dashboard";
   const urlError = searchParams.get("error");
 
   const [error, setError] = useState<string | null>(urlError);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    router.prefetch(redirectTo);
+  }, [router, redirectTo]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -72,7 +77,9 @@ function LoginForm() {
     try {
       const result = await signInWithPassword(formData);
       if (result && result.success) {
-        window.location.href = result.redirectTo || redirectTo;
+        const dest = result.redirectTo || redirectTo;
+        router.push(dest);
+        router.refresh();
         return;
       }
       if (result && !result.success) {

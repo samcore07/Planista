@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle2, Lock, Mail, ShieldAlert, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ function GoogleSubmitButton() {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -72,7 +74,8 @@ export default function RegisterPage() {
           if (result.message) {
             setSuccessMessage(result.message);
           } else if (result.redirectTo) {
-            window.location.href = result.redirectTo;
+            router.push(result.redirectTo);
+            router.refresh();
             return;
           }
         } else {
