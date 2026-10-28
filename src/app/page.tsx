@@ -384,21 +384,15 @@ export default function Home() {
               {architecturePillars.map((pillar, idx) => {
                 const Icon = pillar.icon;
                 return (
-                  <Card key={idx} className="group border-border/80 bg-card hover:border-primary/50 hover:shadow-md transition-all duration-300">
-                    <CardHeader className="space-y-3 pb-4">
-                      <div className="flex items-start gap-3.5">
-                        <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 text-primary group-hover:scale-105 transition-transform shadow-xs shrink-0 mt-0.5">
+                  <Card key={idx} className="border-border/80 bg-card hover:shadow-sm transition-all">
+                    <CardHeader className="space-y-2 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
                           <Icon className="h-5 w-5" />
                         </div>
-                        <div className="space-y-2 flex-1">
-                          <CardTitle className="text-lg font-semibold tracking-tight">{pillar.title}</CardTitle>
-                          {/* Visual, professional architectural tagline badge */}
-                          <div>
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 dark:bg-emerald-950/50 border border-emerald-500/25 dark:border-emerald-500/35 text-emerald-700 dark:text-emerald-300 text-[11px] font-mono font-semibold tracking-tight shadow-xs">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                              <span>{pillar.tagline}</span>
-                            </span>
-                          </div>
+                        <div>
+                          <CardTitle className="text-lg font-semibold">{pillar.title}</CardTitle>
+                          <p className="text-xs font-medium text-primary mt-0.5">{pillar.tagline}</p>
                         </div>
                       </div>
                     </CardHeader>
