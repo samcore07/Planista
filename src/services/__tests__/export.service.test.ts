@@ -129,6 +129,7 @@ describe("ExportService Unit Tests", () => {
       expect(csv).toContain('"Vendor Name","Category","Status","Quoted Amount"');
       expect(csv).toContain('"Culinary Masters Co.","Catering","contracted","9500.00"');
       expect(csv).toContain('"chef@culinarymasters.com"');
+      expect(csv).toContain('"+1-555-0199"');
     });
   });
 

@@ -13,6 +13,8 @@ export async function uploadDocumentAction(eventId: string, formData: FormData):
 
   const file = formData.get("file") as File | null;
   const manualVendor = (formData.get("vendorName") as string) || undefined;
+  const manualEmail = (formData.get("vendorEmail") as string) || undefined;
+  const manualPhone = (formData.get("vendorPhone") as string) || undefined;
   const manualAmountRaw = formData.get("amount");
   const manualAmount = manualAmountRaw ? Number(manualAmountRaw) : undefined;
   const manualCategory = (formData.get("category") as string) || undefined;
@@ -32,7 +34,9 @@ export async function uploadDocumentAction(eventId: string, formData: FormData):
       file.size,
       manualVendor,
       manualAmount,
-      manualCategory
+      manualCategory,
+      manualEmail,
+      manualPhone
     );
 
     if (GroqClient.isConfigured() && file.type.startsWith("image/")) {
@@ -49,6 +53,8 @@ export async function uploadDocumentAction(eventId: string, formData: FormData):
           extractedData = {
             ...aiExtracted,
             vendorName: manualVendor || aiExtracted.vendorName,
+            vendorEmail: manualEmail || aiExtracted.vendorEmail || null,
+            vendorPhone: manualPhone || aiExtracted.vendorPhone || null,
             amount: manualAmount !== undefined ? manualAmount : aiExtracted.amount,
             suggestedCategory: manualCategory || aiExtracted.suggestedCategory,
           };
@@ -101,6 +107,9 @@ export async function confirmScannedExpenseAction(
   if (!user) redirect(`/auth/login?redirectTo=/events/${eventId}/scanner`);
 
   const title = (formData.get("title") as string) || "Scanned Vendor Expense";
+  const vendorName = (formData.get("vendorName") as string) || undefined;
+  const vendorEmail = (formData.get("vendorEmail") as string) || undefined;
+  const vendorPhone = (formData.get("vendorPhone") as string) || undefined;
   const categoryIdRaw = formData.get("categoryId") as string;
   const categoryId = categoryIdRaw && categoryIdRaw !== "uncategorized" ? categoryIdRaw : null;
   const actualAmount = Number(formData.get("actualAmount") || 0);
@@ -119,6 +128,9 @@ export async function confirmScannedExpenseAction(
       dueDate,
       paymentStatus,
       notes,
+      vendorName,
+      vendorEmail,
+      vendorPhone,
     });
     saveSuccess = true;
   } catch (err: unknown) {

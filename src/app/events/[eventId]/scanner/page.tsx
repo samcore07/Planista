@@ -157,6 +157,17 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
+                      <Label htmlFor="vendorEmail">Email (Optional)</Label>
+                      <Input id="vendorEmail" name="vendorEmail" type="email" placeholder="e.g. contact@vendor.com" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="vendorPhone">Phone (Optional)</Label>
+                      <Input id="vendorPhone" name="vendorPhone" type="tel" placeholder="e.g. +91 98765 43210" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
                       <Label htmlFor="amount">Amount ({event.currency})</Label>
                       <Input id="amount" name="amount" type="number" step="0.01" placeholder="e.g. 2500" />
                     </div>
@@ -325,6 +336,32 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
                         defaultValue={`${extractedData.vendorName} - ${extractedData.documentType.toUpperCase()}`}
                         required
                       />
+                    </div>
+
+                    <input type="hidden" name="vendorName" value={extractedData.vendorName} />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="vendorEmail">Vendor Contact Email</Label>
+                        <Input
+                          id="vendorEmail"
+                          name="vendorEmail"
+                          type="email"
+                          defaultValue={extractedData.vendorEmail || ""}
+                          placeholder="e.g. contact@vendor.com"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="vendorPhone">Vendor Phone Number</Label>
+                        <Input
+                          id="vendorPhone"
+                          name="vendorPhone"
+                          type="tel"
+                          defaultValue={extractedData.vendorPhone || ""}
+                          placeholder="e.g. +91 98765 43210"
+                        />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

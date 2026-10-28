@@ -210,9 +210,11 @@ describe("Groq LLM Response Normalizers & Sanitization", () => {
     expect(normalized.proposal?.financialImpact?.amountDelta).toBe(-1200);
   });
 
-  it("normalizeDocumentExtraction cleans vision OCR output into structured invoice data", () => {
+  it("normalizeDocumentExtraction cleans vision OCR output into structured invoice data with email and phone", () => {
     const rawVisionLLM = {
       vendorName: "Grand Vista Ballroom",
+      vendorEmail: "events@grandvista.com",
+      vendorPhone: "+1 (555) 234-5678",
       amount: "$14,500.00",
       date: "2026-11-15",
       suggestedCategory: "Venue",
@@ -223,6 +225,8 @@ describe("Groq LLM Response Normalizers & Sanitization", () => {
 
     const normalized = normalizeDocumentExtraction(rawVisionLLM, "invoice.png");
     expect(normalized.vendorName).toBe("Grand Vista Ballroom");
+    expect(normalized.vendorEmail).toBe("events@grandvista.com");
+    expect(normalized.vendorPhone).toBe("+1 (555) 234-5678");
     expect(normalized.amount).toBe(14500);
     expect(normalized.suggestedCategory).toBe("Venue & Rentals");
     expect(normalized.documentType).toBe("invoice");

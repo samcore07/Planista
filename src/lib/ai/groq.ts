@@ -459,8 +459,23 @@ export function normalizeDocumentExtraction(raw: unknown, fileName?: string): Ex
 
   const fallbackVendor = fileName ? fileName.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ") : "Vendor Partner";
 
+  // Extract contact email & phone if present
+  let vendorEmail: string | null = null;
+  const rawEmail = String(data.vendorEmail || data.email || data.contact_email || data.contactEmail || "").trim();
+  if (rawEmail && rawEmail.includes("@") && rawEmail.toLowerCase() !== "null") {
+    vendorEmail = rawEmail;
+  }
+
+  let vendorPhone: string | null = null;
+  const rawPhone = String(data.vendorPhone || data.phone || data.contact_phone || data.contactPhone || data.tel || "").trim();
+  if (rawPhone && rawPhone.length >= 7 && rawPhone.toLowerCase() !== "null") {
+    vendorPhone = rawPhone;
+  }
+
   return {
     vendorName: String(data.vendorName || data.vendor || fallbackVendor).trim(),
+    vendorEmail,
+    vendorPhone,
     amount,
     date: String(data.date || new Date().toISOString().split("T")[0]).trim(),
     suggestedCategory,
@@ -889,6 +904,8 @@ Requirements:
 Inspect the uploaded receipt, invoice, or vendor quote and extract all financial and operational fields into valid JSON:
 {
   "vendorName": string, // Name of the vendor / business issuing the document (e.g. "Culinary Delights Catering")
+  "vendorEmail": string | null, // Contact email address if found on the document (e.g. "contact@caterer.com" or null)
+  "vendorPhone": string | null, // Contact phone or mobile number if found on the document (e.g. "+91 9876543210" or null)
   "amount": number, // Total amount payable or quoted as a positive number (e.g. 8534.00)
   "date": string, // Date on the document in YYYY-MM-DD format (e.g. "2030-01-15")
   "suggestedCategory": string, // One of: "Venue & Rentals", "Catering & Bar", "Photography & Video", "Floral & Decor", "Music & Entertainment", "Stationery & Favors", "Other"
@@ -898,7 +915,8 @@ Inspect the uploaded receipt, invoice, or vendor quote and extract all financial
 }
 
 Rules:
-- Read and extract the actual text, totals, and company name directly from the image.
+- Read and extract the actual text, totals, company name, email address, and phone number directly from the image.
+- Look for phone numbers (e.g. Tel, Mob, Phone, +91, 10-digit numbers) and email addresses (containing @) anywhere in the header, footer, or body of the document.
 - Never return amount as 0 if a total or subtotal is legible on the image.
 - Return ONLY the JSON object.`;
 

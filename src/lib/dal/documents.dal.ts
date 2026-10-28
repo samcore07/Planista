@@ -16,6 +16,8 @@ export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 
 export interface ExtractedDocumentData {
   vendorName: string;
+  vendorEmail?: string | null;
+  vendorPhone?: string | null;
   amount: number;
   date: string;
   suggestedCategory: string;
@@ -109,7 +111,9 @@ export class DocumentsDAL {
     fileSizeBytes: number,
     manualVendor?: string,
     manualAmount?: number,
-    manualCategory?: string
+    manualCategory?: string,
+    manualEmail?: string,
+    manualPhone?: string
   ): ExtractedDocumentData {
     // Check if external OCR is configured
     const isOcrConfigured = !!process.env.DOCUMENT_OCR_API_KEY;
@@ -155,6 +159,8 @@ export class DocumentsDAL {
 
     return {
       vendorName,
+      vendorEmail: manualEmail || null,
+      vendorPhone: manualPhone || null,
       amount,
       date: new Date().toISOString().split("T")[0],
       suggestedCategory,
@@ -239,6 +245,9 @@ export class DocumentsDAL {
       dueDate: string | null;
       paymentStatus: PaymentStatus;
       notes?: string;
+      vendorName?: string;
+      vendorEmail?: string | null;
+      vendorPhone?: string | null;
     }
   ): Promise<ExpenseRow> {
     const user = await getAuthenticatedUser();
@@ -259,7 +268,7 @@ export class DocumentsDAL {
       notes: confirmed.notes ?? null,
     });
 
-    // 2. Update document extraction status
+    // 2. Update document extraction status & record confirmed details including email/phone
     await supabase
       .from("uploaded_documents")
       .update({
@@ -272,7 +281,52 @@ export class DocumentsDAL {
       .eq("id", documentId)
       .eq("event_id", eventId);
 
-    // 3. Recalculate event state
+    // 3. Sync or create vendor in the vendors table so email & phone appear in the Event Pack vendor directory & CSV
+    try {
+      const vendorName = (confirmed.vendorName || confirmed.title.split(" - ")[0] || "Vendor Partner").trim();
+      const { data: existingVendors } = await supabase
+        .from("vendors")
+        .select("*")
+        .eq("event_id", eventId);
+
+      const matchedVendor = existingVendors?.find(
+        (v) => v.name.toLowerCase() === vendorName.toLowerCase()
+      );
+
+      let categoryName = "Other";
+      if (confirmed.categoryId) {
+        const categories = await BudgetDAL.getCategories(eventId);
+        const cat = categories.find((c) => c.id === confirmed.categoryId);
+        if (cat) categoryName = cat.name;
+      }
+
+      if (matchedVendor) {
+        await supabase
+          .from("vendors")
+          .update({
+            contact_email: confirmed.vendorEmail || matchedVendor.contact_email,
+            contact_phone: confirmed.vendorPhone || matchedVendor.contact_phone,
+            status: matchedVendor.status === "inquiry" ? "contracted" : matchedVendor.status,
+            quoted_amount: matchedVendor.quoted_amount || confirmed.actualAmount,
+          })
+          .eq("id", matchedVendor.id);
+      } else {
+        await supabase.from("vendors").insert({
+          event_id: eventId,
+          name: vendorName,
+          category: categoryName,
+          contact_email: confirmed.vendorEmail || null,
+          contact_phone: confirmed.vendorPhone || null,
+          quoted_amount: confirmed.actualAmount,
+          status: "contracted",
+          notes: confirmed.notes ? `Verified from scanned document: ${confirmed.notes}` : "Imported from scanned receipt/invoice",
+        });
+      }
+    } catch (vendorSyncErr) {
+      console.warn("[confirmAndPersistExpense] Vendor sync notice:", vendorSyncErr);
+    }
+
+    // 4. Recalculate event state
     await EventOrchestratorService.recalculateEventState(eventId);
 
     return expense;

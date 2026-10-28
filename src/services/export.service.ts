@@ -52,13 +52,59 @@ export class ExportService {
 
     const supabase = await createClient();
 
-    const [categories, expenses, tasks, risks, vendorsResult] = await Promise.all([
+    const [categories, expenses, tasks, risks, vendorsResult, documentsResult] = await Promise.all([
       BudgetDAL.getCategories(eventId),
       BudgetDAL.getExpenses(eventId),
       TasksDAL.getTasks(eventId),
       RiskDAL.getRisks(eventId),
       supabase.from("vendors").select("*").eq("event_id", eventId).order("name", { ascending: true }),
+      supabase.from("uploaded_documents").select("*").eq("event_id", eventId),
     ]);
+
+    const vendors = [...(vendorsResult.data || [])];
+    const documents = documentsResult.data || [];
+
+    // Enrich existing vendors or merge vendors from scanned documents to guarantee email & phone in exports
+    for (const doc of documents) {
+      const data = doc.extracted_data as Record<string, unknown> | null;
+      if (!data) continue;
+
+      const vendorName = String(data.vendorName || "").trim();
+      const rawEmail = String(data.vendorEmail || data.contact_email || data.email || "").trim();
+      const vendorEmail = rawEmail && rawEmail.includes("@") && rawEmail.toLowerCase() !== "null" ? rawEmail : null;
+      const rawPhone = String(data.vendorPhone || data.contact_phone || data.phone || "").trim();
+      const vendorPhone = rawPhone && rawPhone.length >= 7 && rawPhone.toLowerCase() !== "null" ? rawPhone : null;
+
+      if (!vendorName && !vendorEmail && !vendorPhone) continue;
+
+      const existingIndex = vendors.findIndex(
+        (v) => v.name.toLowerCase() === vendorName.toLowerCase()
+      );
+
+      if (existingIndex >= 0) {
+        if (!vendors[existingIndex].contact_email && vendorEmail) {
+          vendors[existingIndex].contact_email = vendorEmail;
+        }
+        if (!vendors[existingIndex].contact_phone && vendorPhone) {
+          vendors[existingIndex].contact_phone = vendorPhone;
+        }
+      } else if (vendorName) {
+        vendors.push({
+          id: `doc_vendor_${doc.id}`,
+          event_id: eventId,
+          name: vendorName,
+          category: String(data.suggestedCategory || "Other"),
+          contact_email: vendorEmail,
+          contact_phone: vendorPhone,
+          quoted_amount: Number(data.amount || data.actualAmount || 0) || null,
+          status: "contracted",
+          contract_url: doc.file_url || null,
+          notes: String(data.notes || `Scanned from ${doc.file_name}`),
+          created_at: doc.created_at,
+          updated_at: doc.created_at,
+        });
+      }
+    }
 
     return {
       event,
@@ -66,7 +112,7 @@ export class ExportService {
       expenses,
       tasks,
       risks,
-      vendors: vendorsResult.data || [],
+      vendors,
       generatedAt: new Date().toISOString(),
     };
   }
