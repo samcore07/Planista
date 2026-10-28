@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { RenderingIndicator } from "@/components/rendering/rendering-indicator";
 
 export const metadata: Metadata = {
   title: "Planista — Intelligent Event Planning & Production",
@@ -51,6 +52,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground">
         <ThemeProvider>
           {children}
+          <RenderingIndicator />
         </ThemeProvider>
       </body>
     </html>
