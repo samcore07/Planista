@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
@@ -54,8 +55,9 @@ export function createAdminClient() {
 /**
  * Derives and verifies the authenticated user from the server session.
  * Never trusts client-supplied user IDs.
+ * Memoized per-request to avoid redundant network roundtrips to Supabase Auth.
  */
-export async function getAuthenticatedUser() {
+export const getAuthenticatedUser = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -67,4 +69,4 @@ export async function getAuthenticatedUser() {
   }
 
   return user;
-}
+});

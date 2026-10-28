@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient, createAdminClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { type Database, EventStatus } from "@/types/database.types";
 import { env } from "@/config/env";
@@ -46,9 +47,10 @@ export type EventDashboardSummary = {
 
 export class EventsDAL {
   /**
-   * Retrieves all events accessible by the currently authenticated user
+   * Retrieves all events accessible by the currently authenticated user.
+   * Memoized per-request to avoid duplicate fetches across layouts and switcher controls.
    */
-  static async getEvents(): Promise<EventRow[]> {
+  static getEvents = cache(async (): Promise<EventRow[]> => {
     const user = await getAuthenticatedUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -63,7 +65,7 @@ export class EventsDAL {
     }
 
     return data || [];
-  }
+  });
 
   /**
    * Retrieves aggregated live dashboard statistics calculated from real database entities
@@ -180,9 +182,10 @@ export class EventsDAL {
   }
 
   /**
-   * Retrieves a single event by ID with security verification
+   * Retrieves a single event by ID with security verification.
+   * Memoized per-request to deduplicate queries between layout and page components.
    */
-  static async getEventById(eventId: string): Promise<EventRow | null> {
+  static getEventById = cache(async (eventId: string): Promise<EventRow | null> => {
     const user = await getAuthenticatedUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -198,7 +201,7 @@ export class EventsDAL {
     }
 
     return data;
-  }
+  });
 
   /**
    * Creates an event bound securely to the authenticated user's ID

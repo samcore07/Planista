@@ -85,6 +85,7 @@ export function EventWorkspaceNav({ eventId }: WorkspaceNavProps) {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={true}
             className={cn(
               "flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               isActive
