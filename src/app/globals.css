@@ -73,9 +73,11 @@
 }
 
 html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
   color-scheme: light;
+}
+
+section[id] {
+  scroll-margin-top: 5rem;
 }
 
 html.dark {

@@ -25,29 +25,45 @@ export function ShowcaseNav() {
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
 
-    const sectionIds = navItems.map((item) => item.id);
-    const sections = sectionIds
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
+    let observer: IntersectionObserver | null = null;
+    let idleId: number | NodeJS.Timeout;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
+    const setupObserver = () => {
+      const sectionIds = navItems.map((item) => item.id);
+      const sections = sectionIds
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => el !== null);
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              setActiveSection(entry.target.id);
+            }
           }
+        },
+        {
+          rootMargin: "-20% 0px -70% 0px",
+          threshold: 0,
         }
-      },
-      {
-        rootMargin: "-20% 0px -70% 0px",
-        threshold: 0,
-      }
-    );
+      );
 
-    sections.forEach((section) => observer.observe(section));
+      sections.forEach((section) => observer?.observe(section));
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleId = (window as unknown as { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(setupObserver);
+    } else {
+      idleId = setTimeout(setupObserver, 200);
+    }
 
     return () => {
-      sections.forEach((section) => observer.unobserve(section));
+      if (typeof window !== "undefined" && "cancelIdleCallback" in window && typeof idleId === "number") {
+        (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
+      } else {
+        clearTimeout(idleId);
+      }
+      observer?.disconnect();
     };
   }, []);
 
@@ -80,16 +96,7 @@ export function ShowcaseNav() {
     const targetElement = document.getElementById(targetId);
 
     if (targetElement) {
-      const headerOffset = 80;
-      const elementPosition = targetElement.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-
-      // Update URL hash smoothly without instant page jump
+      targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
       window.history.pushState(null, "", `#${targetId}`);
       setActiveSection(targetId);
     }

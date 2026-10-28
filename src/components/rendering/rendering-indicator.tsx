@@ -128,7 +128,7 @@ export function RenderingIndicator() {
 
     // 4. Intercept fetch to catch Server Actions (e.g. signInWithPassword, Next.js Actions)
     const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
+    const patchedFetch = async (...args: Parameters<typeof fetch>) => {
       const [input, init] = args;
       const url = typeof input === "string" ? input : input instanceof Request ? input.url : "";
 
@@ -169,17 +169,40 @@ export function RenderingIndicator() {
       }
     };
 
-    document.addEventListener("click", handleLinkClick, { capture: true });
-    document.addEventListener("submit", handleFormSubmit, { capture: true });
-    window.addEventListener("popstate", handlePopState);
-    window.addEventListener(RENDERING_EVENT, handleCustomRendering);
+    let idleId: number | NodeJS.Timeout;
+    let attached = false;
+
+    const attachListeners = () => {
+      attached = true;
+      document.addEventListener("click", handleLinkClick, { capture: true });
+      document.addEventListener("submit", handleFormSubmit, { capture: true });
+      window.addEventListener("popstate", handlePopState);
+      window.addEventListener(RENDERING_EVENT, handleCustomRendering);
+      window.fetch = patchedFetch;
+    };
+
+    const isTest = typeof process !== "undefined" && process.env.NODE_ENV === "test";
+    if (isTest) {
+      attachListeners();
+    } else if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleId = (window as unknown as { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(attachListeners);
+    } else {
+      idleId = setTimeout(attachListeners, 200);
+    }
 
     return () => {
-      document.removeEventListener("click", handleLinkClick, { capture: true });
-      document.removeEventListener("submit", handleFormSubmit, { capture: true });
-      window.removeEventListener("popstate", handlePopState);
-      window.removeEventListener(RENDERING_EVENT, handleCustomRendering);
-      window.fetch = originalFetch;
+      if (typeof window !== "undefined" && "cancelIdleCallback" in window && typeof idleId === "number") {
+        (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
+      } else {
+        clearTimeout(idleId);
+      }
+      if (attached) {
+        document.removeEventListener("click", handleLinkClick, { capture: true });
+        document.removeEventListener("submit", handleFormSubmit, { capture: true });
+        window.removeEventListener("popstate", handlePopState);
+        window.removeEventListener(RENDERING_EVENT, handleCustomRendering);
+        window.fetch = originalFetch;
+      }
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [startRendering, stopRendering]);
