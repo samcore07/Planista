@@ -499,9 +499,9 @@ export default function Home() {
                         {wf.desc}
                       </p>
 
-                      <div className="pt-2 flex items-center gap-2 text-xs font-medium text-foreground">
+                      <div className="pt-2 flex items-center gap-2 text-xs font-medium text-foreground flex-wrap">
                         <span className="text-muted-foreground">Deliverable:</span>
-                        <code className="px-2 py-0.5 rounded bg-secondary text-[11px] font-mono text-primary">
+                        <code className="px-2 py-0.5 rounded bg-secondary text-[11px] font-mono text-primary dark:text-emerald-300 font-medium">
                           {wf.deliverable}
                         </code>
                       </div>
