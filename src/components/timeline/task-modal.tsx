@@ -138,13 +138,14 @@ export function TaskModal({ eventId, task, trigger }: TaskModalProps) {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="estimatedDurationHours">Est. Duration (Hours)</Label>
+                  <Label htmlFor="estimatedDurationHours">Process Time / Duration (Hours)</Label>
                   <Input
                     id="estimatedDurationHours"
                     name="estimatedDurationHours"
                     type="number"
                     step="0.5"
                     min="0"
+                    placeholder="e.g. 2.5"
                     defaultValue={task?.estimated_duration_hours ? Number(task.estimated_duration_hours) : ""}
                   />
                 </div>

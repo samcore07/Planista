@@ -104,7 +104,7 @@ export async function toggleTaskStatusAction(
   }
 
   revalidatePath(`/events/${eventId}/timeline`);
-  redirect(`/events/${eventId}/timeline?saved=true`);
+  redirect(`/events/${eventId}/timeline`);
 }
 
 export async function deleteTaskAction(eventId: string, taskId: string): Promise<void> {
@@ -136,7 +136,7 @@ export async function addDependencyAction(
   }
 
   revalidatePath(`/events/${eventId}/timeline`);
-  redirect(`/events/${eventId}/timeline?saved=true`);
+  redirect(`/events/${eventId}/timeline`);
 }
 
 export async function removeDependencyAction(
