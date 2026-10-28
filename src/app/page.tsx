@@ -18,6 +18,7 @@ import {
   Binary,
   Workflow,
   GitBranch,
+  PlayCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -509,6 +510,71 @@ export default function Home() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* Product Video Tutorial Section */}
+        <section id="tutorial" className="py-16 md:py-24 border-t border-border/60 bg-gradient-to-b from-secondary/20 via-background to-secondary/10 relative overflow-hidden">
+          {/* Decorative ambient backdrop glow */}
+          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-primary/10 rounded-full blur-3xl opacity-50" />
+
+          <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+            {/* Section Header */}
+            <div className="text-center max-w-3xl mx-auto space-y-3">
+              <Badge variant="outline" className="uppercase tracking-widest text-[10px] border-primary/30 text-primary gap-1.5 py-1 px-3">
+                <PlayCircle className="h-3.5 w-3.5" />
+                Product Walkthrough
+              </Badge>
+              <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-tight text-foreground">
+                See Planista in Action
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Watch a comprehensive tutorial walkthrough covering natural language blueprint synthesis, live receipt OCR scanning, CPM critical path logistics, and one-click production export.
+              </p>
+            </div>
+
+            {/* Video Frame */}
+            <div className="relative mx-auto max-w-4xl">
+              <div className="relative rounded-2xl border border-border/80 bg-card p-2.5 sm:p-3.5 shadow-2xl backdrop-blur-xl">
+                <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/95 shadow-inner">
+                  {/* YouTube Embed Video - swap video ID below with your video */}
+                  <iframe
+                    className="w-full h-full border-0"
+                    src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&modestbranding=1"
+                    title="Planista Product Tutorial & Walkthrough"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+
+              {/* Timestamp / Chapter Highlights */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                <div className="p-3.5 rounded-xl border border-border/70 bg-card/80 text-left space-y-1 hover:border-primary/40 transition-colors shadow-xs">
+                  <span className="font-mono text-[10px] font-bold text-primary block">00:00 - 01:15</span>
+                  <h4 className="text-xs font-semibold text-foreground">AI Architect Intake</h4>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2">Generating structured Zod blueprints from natural language inputs.</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-border/70 bg-card/80 text-left space-y-1 hover:border-primary/40 transition-colors shadow-xs">
+                  <span className="font-mono text-[10px] font-bold text-primary block">01:15 - 02:30</span>
+                  <h4 className="text-xs font-semibold text-foreground">Live Budget & OCR</h4>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2">Uploading receipt quotes with automated discrepancy detection.</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-border/70 bg-card/80 text-left space-y-1 hover:border-primary/40 transition-colors shadow-xs">
+                  <span className="font-mono text-[10px] font-bold text-primary block">02:30 - 03:45</span>
+                  <h4 className="text-xs font-semibold text-foreground">CPM Logistics & Graph</h4>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2">Interactive dependency flowcharts and slack float analysis.</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-border/70 bg-card/80 text-left space-y-1 hover:border-primary/40 transition-colors shadow-xs">
+                  <span className="font-mono text-[10px] font-bold text-primary block">03:45 - 05:00</span>
+                  <h4 className="text-xs font-semibold text-foreground">Event Pack Export</h4>
+                  <p className="text-[11px] text-muted-foreground line-clamp-2">Compiling verified run sheets, printable briefs, and ledger CSVs.</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>

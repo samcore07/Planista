@@ -13,6 +13,7 @@ const navItems: NavItem[] = [
   { name: "Features", href: "#features", id: "features" },
   { name: "Architecture", href: "#architecture", id: "architecture" },
   { name: "Workflow", href: "#workflow", id: "workflow" },
+  { name: "Tutorial", href: "#tutorial", id: "tutorial" },
 ];
 
 export function ShowcaseNav() {
