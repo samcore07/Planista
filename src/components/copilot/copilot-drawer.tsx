@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Planning Copilot Drawer component.
+ * Provides a conversational planning assistant operating under a Controlled Action Pipeline (CAP)
+ * with structured proposal review cards and zero unauthorized automatic database mutations.
+ */
+
 "use client";
 
 import * as React from "react";
@@ -15,12 +21,21 @@ import { sendCopilotMessageAction, applyCopilotProposalAction } from "@/app/even
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
+/**
+ * Props for the CopilotDrawer component.
+ */
 interface CopilotDrawerProps {
   eventId: string;
   initialHistory: CopilotMessage[];
 }
 
-export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps) {
+/**
+ * Slide-out Copilot drawer with streaming conversation and explicit human-in-the-loop action proposals.
+ *
+ * @param props - Component properties containing eventId and prior message history.
+ * @returns JSX Element rendering the copilot interface.
+ */
+export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps): React.JSX.Element {
   const [isOpen, setIsOpen] = React.useState(false);
   const [messages, setMessages] = React.useState<CopilotMessage[]>(initialHistory);
   const [inputValue, setInputValue] = React.useState("");

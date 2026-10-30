@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   BudgetService,
   roundCurrency,
+  calculateExpenseBalance,
   BudgetCategoryItem,
   ExpenseItem,
 } from "../budget.service";
@@ -148,5 +149,30 @@ describe("BudgetService & Deterministic Currency Calculations", () => {
     expect(result.outstandingBalance).toBe(0);
     expect(BudgetService.calculateCostPerGuest(Number.NaN, 10)).toBe(0);
     expect(BudgetService.calculateCostPerGuest(1000, Number.NaN)).toBe(0);
+  });
+
+  it("centralizes expense balance calculations across all payment status states", () => {
+    // Unpaid
+    const unpaid = calculateExpenseBalance(5000, 0, "unpaid");
+    expect(unpaid.depositPaid).toBe(0);
+    expect(unpaid.outstandingBalance).toBe(5000);
+    expect(unpaid.isFullyPaid).toBe(false);
+
+    // Partially paid
+    const partial = calculateExpenseBalance(5000, 1500, "deposit_paid");
+    expect(partial.depositPaid).toBe(1500);
+    expect(partial.outstandingBalance).toBe(3500);
+    expect(partial.isFullyPaid).toBe(false);
+
+    // Fully paid
+    const full = calculateExpenseBalance(5000, 1000, "fully_paid");
+    expect(full.depositPaid).toBe(5000);
+    expect(full.outstandingBalance).toBe(0);
+    expect(full.isFullyPaid).toBe(true);
+
+    // Deposit exceeding actual capped to actual
+    const overdeposit = calculateExpenseBalance(5000, 7000, "deposit_paid");
+    expect(overdeposit.depositPaid).toBe(5000);
+    expect(overdeposit.outstandingBalance).toBe(0);
   });
 });

@@ -1,0 +1,46 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    name: Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: "https://mock-ci-project.supabase.co"
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock-anon-key-for-ci-verification"
+      SUPABASE_SERVICE_ROLE_KEY: "mock-service-role-key-for-ci-verification"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      GROQ_API_KEY: "mock-groq-key-ci"
+      GEMINI_API_KEY: "mock-gemini-key-ci"
+      NODE_ENV: "production"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Code Quality & Linter Audit
+        run: npm run lint
+
+      - name: Strict TypeScript Compilation
+        run: npm run typecheck
+
+      - name: Deterministic Unit & Integration Test Suites
+        run: npm test
+
+      - name: Next.js Production Build (PPR + Static Generation)
+        run: npm run build

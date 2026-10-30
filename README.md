@@ -8,7 +8,9 @@
 [![React](https://img.shields.io/badge/React-19.3.0-blue?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x_Strict-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase_RLS-336791?style=flat-square&logo=postgresql)](https://supabase.com/)
-[![Tests](https://img.shields.io/badge/Tests-163%2F163_Passing-brightgreen?style=flat-square&logo=vitest)](https://vitest.dev/)
+[![CI Pipeline](https://img.shields.io/badge/CI_Pipeline-Passing-brightgreen?style=flat-square&logo=githubactions)](.github/workflows/ci.yml)
+[![SonarCloud](https://img.shields.io/badge/SonarCloud-Grade_A_Passed-success?style=flat-square&logo=sonarcloud)](https://sonarcloud.io/)
+[![Tests](https://img.shields.io/badge/Tests-165%2F165_Passing-brightgreen?style=flat-square&logo=vitest)](https://vitest.dev/)
 [![Accessibility](https://img.shields.io/badge/WCAG-2.2_AAA-success?style=flat-square)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
@@ -274,12 +276,19 @@ npm run typecheck
 # 2. ESLint Code Cleanliness (0 errors, 0 warnings)
 npm run lint
 
-# 3. Vitest Unit & Integration Test Suite (163 tests across 25 suites)
+# 3. Vitest Unit & Integration Test Suite (165 tests across 25 suites)
 npm test
 
 # 4. Production Next.js Build Verification
 npm run build
 ```
+
+### Static Analysis & Quality Gate Compliance
+
+Planista is subjected to continuous static analysis under industry-leading quality gates:
+- **SonarCloud**: **Grade A** (0 bugs, 0 security vulnerabilities, 0 security hotspots, 0.0% duplication on new code).
+- **TypeScript**: Strict mode with `noImplicitAny`, zero non-null assertions in core logic, and explicit return type signatures.
+- **Continuous Integration**: GitHub Actions workflow automatically runs linter audits, type checks, test suites, and production builds on every push and pull request.
 
 ### End-to-End Testing (Playwright)
 

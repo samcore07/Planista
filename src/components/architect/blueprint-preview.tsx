@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Interactive Blueprint Preview and Staging Editor.
+ * Renders synthesized event blueprints, category budgets, milestone tasks,
+ * and allows real-time pre-database editing before atomic persistence.
+ */
+
 "use client";
 
 import * as React from "react";

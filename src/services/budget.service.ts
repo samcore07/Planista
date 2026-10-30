@@ -55,6 +55,38 @@ export function roundCurrency(amount: number): number {
   return Math.round((amount + Number.EPSILON) * 100) / 100;
 }
 
+export interface ExpenseBalance {
+  depositPaid: number;
+  outstandingBalance: number;
+  isFullyPaid: boolean;
+}
+
+/**
+ * Deterministically computes reconciled deposit paid and outstanding balance for an expense.
+ * Centralized single source of truth used across budget calculation, risk auditing, and export reporting.
+ *
+ * @param actualAmount - Total committed or invoiced expense amount.
+ * @param depositPaid - Stated deposit or prepayment amount.
+ * @param paymentStatus - Milestone payment status ('unpaid', 'deposit_paid', 'fully_paid').
+ * @returns Reconciled deposit amount, remaining outstanding balance, and boolean indicating full settlement.
+ */
+export function calculateExpenseBalance(
+  actualAmount: number,
+  depositPaid: number,
+  paymentStatus: "unpaid" | "deposit_paid" | "fully_paid" | string
+): ExpenseBalance {
+  const act = Math.max(0, roundCurrency(actualAmount));
+  const isFullyPaid = paymentStatus === "fully_paid";
+  const dep = isFullyPaid ? act : Math.min(act, Math.max(0, roundCurrency(depositPaid)));
+  const outstandingBalance = isFullyPaid ? 0 : roundCurrency(Math.max(0, act - dep));
+
+  return {
+    depositPaid: dep,
+    outstandingBalance,
+    isFullyPaid,
+  };
+}
+
 /**
  * Deterministic live budget calculation service.
  * Never relies on an LLM for financial math.
@@ -83,9 +115,9 @@ export class BudgetService {
     for (const exp of expenses) {
       const est = Math.max(0, roundCurrency(exp.estimatedAmount));
       const act = Math.max(0, roundCurrency(exp.actualAmount));
-      // Reconcile deposit paid: if paymentStatus is fully_paid, full amount is paid at once
-      const isFullyPaid = exp.paymentStatus === "fully_paid";
-      const dep = isFullyPaid ? act : Math.min(act, Math.max(0, roundCurrency(exp.depositPaid)));
+      // Reconcile deposit paid and outstanding balance through centralized domain logic
+      const balance = calculateExpenseBalance(act, exp.depositPaid, exp.paymentStatus);
+      const dep = balance.depositPaid;
 
       totalEstimated = roundCurrency(totalEstimated + est);
       totalActual = roundCurrency(totalActual + act);

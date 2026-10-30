@@ -1,3 +1,8 @@
+/**
+ * @fileoverview AI Architect Intake Form component.
+ * Collects event requirements and coordinates with generative AI models to synthesize complete event blueprints.
+ */
+
 "use client";
 
 import * as React from "react";
@@ -19,7 +24,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 
-export function ArchitectIntakeForm() {
+/**
+ * Interactive intake form allowing planners to describe event goals and trigger LLM blueprint synthesis.
+ *
+ * @returns JSX Element rendering the architect intake wizard.
+ */
+export function ArchitectIntakeForm(): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [blueprint, setBlueprint] = React.useState<EventBlueprint | null>(null);
