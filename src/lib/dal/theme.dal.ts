@@ -1,9 +1,18 @@
+/**
+ * @fileoverview Data Access Layer (DAL) for Event Theme Concepts and Aesthetic Palettes.
+ * Provides tenant-isolated management of color palettes, decor directions, lighting cues,
+ * and moodboard asset URLs with strict Zod validation.
+ */
+
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { type Database, type Json } from "@/types/database.types";
 import { z } from "zod";
 
 export type ThemeRow = Database["public"]["Tables"]["theme_concepts"]["Row"];
 
+/**
+ * Validation schema for theme concept generation and persistence.
+ */
 export const themeConceptInputSchema = z.object({
   name: z.string().min(2, "Theme name must be at least 2 characters"),
   description: z.string().min(5, "Description is required"),
@@ -29,7 +38,16 @@ export const themeConceptInputSchema = z.object({
 
 export type ThemeConceptInput = z.infer<typeof themeConceptInputSchema>;
 
+/**
+ * Data Access Layer for event aesthetic themes and color palettes.
+ */
 export class ThemeDAL {
+  /**
+   * Retrieves all aesthetic theme concepts created for an event.
+   *
+   * @param eventId - Target event UUID.
+   * @returns Array of theme concept rows.
+   */
   static async getThemes(eventId: string): Promise<ThemeRow[]> {
     const user = await getAuthenticatedUser();
     if (!user) throw new Error("Unauthorized");
@@ -45,6 +63,12 @@ export class ThemeDAL {
     return data || [];
   }
 
+  /**
+   * Designates a specific theme as the active primary theme, unselecting all others for the event.
+   *
+   * @param eventId - Target event UUID.
+   * @param themeId - UUID of the theme concept to activate.
+   */
   static async selectTheme(eventId: string, themeId: string): Promise<void> {
     const user = await getAuthenticatedUser();
     if (!user) throw new Error("Unauthorized");

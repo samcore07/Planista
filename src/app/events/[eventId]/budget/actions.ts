@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Server Actions for managing event budget categories and line-item expenses.
+ * Enforces Zod validation, tenant isolation, and triggers real-time ledger orchestration.
+ */
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -5,6 +10,12 @@ import { redirect } from "next/navigation";
 import { BudgetDAL, createCategorySchema, createExpenseSchema, updateExpenseSchema } from "@/lib/dal/budget.dal";
 import { EventOrchestratorService } from "@/services/orchestrator.service";
 
+/**
+ * Server action to create a new budget department category.
+ *
+ * @param eventId - UUID of the target event.
+ * @param formData - Form data containing name and allocatedAmount.
+ */
 export async function createCategoryAction(eventId: string, formData: FormData): Promise<void> {
   const name = formData.get("name") as string;
   const allocatedAmount = Number(formData.get("allocatedAmount") || 0);

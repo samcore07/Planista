@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Runtime environment schema validation using Zod.
+ * Enforces strictly-typed configurations with deterministic fallbacks across environments.
+ */
+
 import { z } from "zod";
 
 const envSchema = z.object({

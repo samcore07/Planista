@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Server Actions for core Event entity lifecycle (creation, modification, archiving).
+ * Validates inputs with Zod schemas and synchronizes cache revalidations.
+ */
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -5,6 +10,11 @@ import { redirect } from "next/navigation";
 import { EventsDAL, createEventInputSchema, updateEventInputSchema } from "@/lib/dal/events.dal";
 import { EventOrchestratorService } from "@/services/orchestrator.service";
 
+/**
+ * Creates a new event record from manual form submission and redirects to the event overview.
+ *
+ * @param formData - Multi-field form data containing title, eventType, budget, etc.
+ */
 export async function createEventAction(formData: FormData): Promise<void> {
   const title = formData.get("title") as string;
   const eventType = formData.get("eventType") as string;

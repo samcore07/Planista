@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Server Actions for AI Theme Studio.
+ * Integrates Groq LLaMA 3.3 theme generation, curated fallback palettes,
+ * and tenant-isolated selection.
+ */
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -6,6 +12,12 @@ import { ThemeDAL, ThemeConceptInput } from "@/lib/dal/theme.dal";
 import { EventsDAL } from "@/lib/dal/events.dal";
 import { GroqClient } from "@/lib/ai/groq";
 
+/**
+ * Designates a specific theme concept as the active palette for an event.
+ *
+ * @param eventId - Target event UUID.
+ * @param themeId - UUID of the theme concept to activate.
+ */
 export async function selectThemeAction(eventId: string, themeId: string): Promise<void> {
   try {
     await ThemeDAL.selectTheme(eventId, themeId);

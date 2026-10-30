@@ -1,7 +1,19 @@
-import { type NextRequest } from "next/server";
+/**
+ * @fileoverview Next.js Edge Middleware for Planista.
+ * Intercepts incoming requests to validate authentication cookies, refresh Supabase auth tokens,
+ * and enforce security boundaries across protected and public routes.
+ */
+
+import { type NextRequest, type NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+/**
+ * Edge middleware handler executing on every incoming matching request.
+ *
+ * @param request - NextRequest representation of the incoming HTTP request.
+ * @returns Evaluated NextResponse with updated session headers and cookie mutations.
+ */
+export async function middleware(request: NextRequest): Promise<NextResponse> {
   return await updateSession(request);
 }
 

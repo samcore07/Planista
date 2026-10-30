@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Server Actions for Quote & Receipt OCR Document Scanner and Live QR Attendee Validation.
+ * Leverages Groq Multimodal Vision with deterministic fallback and tenant-isolated document repositories.
+ */
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -7,6 +12,12 @@ import { DocumentsDAL } from "@/lib/dal/documents.dal";
 import { GroqClient } from "@/lib/ai/groq";
 import { type Json } from "@/types/database.types";
 
+/**
+ * Uploads a vendor quote or invoice document, extracting line items and verifying budget caps.
+ *
+ * @param eventId - Target event UUID.
+ * @param formData - Multi-part form data containing the uploaded file and manual overrides.
+ */
 export async function uploadDocumentAction(eventId: string, formData: FormData): Promise<void> {
   const user = await getAuthenticatedUser();
   if (!user) redirect(`/auth/login?redirectTo=/events/${eventId}/scanner`);

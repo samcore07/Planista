@@ -1,7 +1,16 @@
+/**
+ * @fileoverview Data Access Layer (DAL) for Planning Copilot Conversation and Action Proposals.
+ * Enforces controlled action pipelines, preventing raw database mutations by requiring
+ * explicit user approval for generated financial or schedule proposals.
+ */
+
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { type Json } from "@/types/database.types";
 import { z } from "zod";
 
+/**
+ * Validation schema for structured Copilot actions and trade-off proposals.
+ */
 export const copilotActionProposalSchema = z.object({
   actionType: z.enum([
     "adjust_budget",
@@ -29,6 +38,9 @@ export const copilotActionProposalSchema = z.object({
 
 export type CopilotActionProposal = z.infer<typeof copilotActionProposalSchema>;
 
+/**
+ * Interface representing a message within the Copilot conversation thread.
+ */
 export interface CopilotMessage {
   id: string;
   sender: "user" | "copilot";
@@ -38,6 +50,9 @@ export interface CopilotMessage {
   createdAt: string;
 }
 
+/**
+ * Data Access Layer for persisting and retrieving Copilot conversation threads.
+ */
 export class CopilotDAL {
   /**
    * Retrieves conversation history stored per event

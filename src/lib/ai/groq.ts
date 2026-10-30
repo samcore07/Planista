@@ -536,12 +536,16 @@ export class GroqClient {
       if (res.ok) {
         const json = await res.json();
         const availableIds: string[] = (json.data || []).map((m: { id: string }) => m.id);
-        console.log(`[GroqClient] Available models on account: ${availableIds.join(", ")}`);
+        if (process.env.NODE_ENV !== "production") {
+          console.info(`[GroqClient] Available models on account: ${availableIds.join(", ")}`);
+        }
 
         for (const candidate of PREFERRED_PRIORITY) {
           if (availableIds.includes(candidate)) {
             cachedTextModel = candidate;
-            console.log(`[GroqClient] Selected active model: "${cachedTextModel}"`);
+            if (process.env.NODE_ENV !== "production") {
+              console.info(`[GroqClient] Selected active model: "${cachedTextModel}"`);
+            }
             return cachedTextModel;
           }
         }
@@ -685,7 +689,9 @@ CRITICAL RULES:
       const validated = eventBlueprintSchema.safeParse(normalized);
 
       if (validated.success) {
-        console.log(`[GroqClient] Successfully generated AI blueprint for "${input.title || input.eventType}" using model ${model}`);
+        if (process.env.NODE_ENV !== "production") {
+          console.info(`[GroqClient] Successfully generated AI blueprint for "${input.title || input.eventType}" using model ${model}`);
+        }
         return validated.data;
       } else {
         console.warn("[GroqClient] Blueprint validation warning, returning sanitized structure:", validated.error.format());
@@ -796,7 +802,9 @@ Guidelines:
       const cleaned = cleanJsonString(content);
       const parsed = JSON.parse(cleaned);
       const normalized = normalizeCopilotOutput(parsed);
-      console.log(`[GroqClient] Successfully generated Copilot response using model ${model}`);
+      if (process.env.NODE_ENV !== "production") {
+        console.info(`[GroqClient] Successfully generated Copilot response using model ${model}`);
+      }
       return normalized;
     } catch (err) {
       console.error("[GroqClient] chatCopilot exception:", err);
@@ -872,7 +880,9 @@ Requirements:
       const validated = themeConceptInputSchema.safeParse(normalized);
 
       if (validated.success) {
-        console.log(`[GroqClient] Successfully generated AI theme "${normalized.name}" using model ${model}`);
+        if (process.env.NODE_ENV !== "production") {
+          console.info(`[GroqClient] Successfully generated AI theme "${normalized.name}" using model ${model}`);
+        }
         return validated.data;
       } else {
         console.warn("[GroqClient] Theme validation warning, returning normalized concept:", validated.error.format());
@@ -909,7 +919,9 @@ Requirements:
         const ids: string[] = (json.data || []).map((m: { id: string }) => m.id);
         for (const candidate of CANDIDATES) {
           if (ids.includes(candidate)) {
-            console.log(`[GroqClient] Selected active vision model: "${candidate}"`);
+            if (process.env.NODE_ENV !== "production") {
+              console.info(`[GroqClient] Selected active vision model: "${candidate}"`);
+            }
             return candidate;
           }
         }
@@ -998,7 +1010,9 @@ Rules:
       const cleaned = cleanJsonString(content);
       const parsed = JSON.parse(cleaned);
       const normalized = normalizeDocumentExtraction(parsed, params.fileName);
-      console.log(`[GroqClient] Successfully extracted document using ${visionModel}: "${normalized.vendorName}" ₹${normalized.amount}`);
+      if (process.env.NODE_ENV !== "production") {
+        console.info(`[GroqClient] Successfully extracted document using ${visionModel}: "${normalized.vendorName}" ₹${normalized.amount}`);
+      }
       return normalized;
     } catch (err) {
       console.error("[GroqClient] extractDocumentVision exception:", err);

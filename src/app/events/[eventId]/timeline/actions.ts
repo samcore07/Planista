@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Server Actions for Critical Path Timeline & Task Checklist.
+ * Supports task lifecycle mutations, optimistic status flips, DAG dependency linking,
+ * and automated CPM schedule shift propagation.
+ */
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -6,6 +12,12 @@ import { TasksDAL, createTaskSchema, updateTaskSchema } from "@/lib/dal/tasks.da
 import { TimelineService } from "@/services/timeline.service";
 import { EventOrchestratorService } from "@/services/orchestrator.service";
 
+/**
+ * Creates a new milestone task under the specified event timeline.
+ *
+ * @param eventId - Target event UUID.
+ * @param formData - Form fields containing task parameters.
+ */
 export async function createTaskAction(eventId: string, formData: FormData): Promise<void> {
   const title = formData.get("title") as string;
   const description = (formData.get("description") as string) || null;

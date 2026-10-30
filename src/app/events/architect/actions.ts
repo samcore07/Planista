@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Server Actions for AI Event Architect.
+ * Synthesizes comprehensive event blueprints from natural language prompts using
+ * Google Gemini and Groq LLaMA models, with strict Zod validation and transactional persistence.
+ */
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -32,6 +38,12 @@ export interface PersistBlueprintResult {
   error?: string;
 }
 
+/**
+ * Generates an end-to-end event blueprint from an unstructured natural language description.
+ *
+ * @param rawInput - Brief specifications (title, type, guest count, budget, location, date).
+ * @returns Result object with validated EventBlueprint or error message.
+ */
 export async function generateBlueprintAction(
   rawInput: BlueprintGenerationInput
 ): Promise<GenerateBlueprintResult> {

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Accessible Button Component with Class Variance Authority (CVA) styling.
+ * Supports design system tokens, polymorphic Slot rendering, keyboard focus rings, and WCAG 2.2 AAA contrast.
+ */
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";

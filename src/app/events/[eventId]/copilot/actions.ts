@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Server Actions for Planning Copilot.
+ * Enforces controlled action pipelines, proposing budget adjustments and task additions
+ * that require explicit user confirmation before applying database updates.
+ */
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -16,6 +22,13 @@ export interface SendMessageResult {
   error?: string;
 }
 
+/**
+ * Sends a natural language query or command to the Planning Copilot.
+ *
+ * @param eventId - Target event UUID.
+ * @param userMessageText - Prompt from planner.
+ * @returns Object with success indicator, updated history, or error message.
+ */
 export async function sendCopilotMessageAction(
   eventId: string,
   userMessageText: string
