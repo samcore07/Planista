@@ -65,9 +65,9 @@ export async function sendCopilotMessageAction(
     try {
       const previousHistory = await CopilotDAL.getHistory(eventId);
       const groqResponse = await GroqClient.chatCopilot({
-        event: event as unknown as Record<string, unknown>,
-        categories: categories as unknown as Record<string, unknown>[],
-        tasks: tasks as unknown as Record<string, unknown>[],
+        event,
+        categories,
+        tasks,
         userMessage: trimmed,
         conversationHistory: previousHistory.map((m) => ({
           sender: m.sender,

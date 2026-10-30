@@ -51,15 +51,15 @@ export function ShowcaseNav() {
       sections.forEach((section) => observer?.observe(section));
     };
 
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      idleId = (window as unknown as { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(setupObserver);
+    if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(setupObserver);
     } else {
       idleId = setTimeout(setupObserver, 200);
     }
 
     return () => {
-      if (typeof window !== "undefined" && "cancelIdleCallback" in window && typeof idleId === "number") {
-        (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
+      if (typeof window !== "undefined" && typeof window.cancelIdleCallback === "function" && typeof idleId === "number") {
+        window.cancelIdleCallback(idleId);
       } else {
         clearTimeout(idleId);
       }

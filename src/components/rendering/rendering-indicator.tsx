@@ -184,15 +184,15 @@ export function RenderingIndicator() {
     const isTest = typeof process !== "undefined" && process.env.NODE_ENV === "test";
     if (isTest) {
       attachListeners();
-    } else if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      idleId = (window as unknown as { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(attachListeners);
+    } else if (typeof window !== "undefined" && typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(attachListeners);
     } else {
       idleId = setTimeout(attachListeners, 200);
     }
 
     return () => {
-      if (typeof window !== "undefined" && "cancelIdleCallback" in window && typeof idleId === "number") {
-        (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
+      if (typeof window !== "undefined" && typeof window.cancelIdleCallback === "function" && typeof idleId === "number") {
+        window.cancelIdleCallback(idleId);
       } else {
         clearTimeout(idleId);
       }

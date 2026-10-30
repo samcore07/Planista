@@ -7,6 +7,9 @@ import {
 import { BlueprintGenerationInput, CopilotActionProposal } from "@/lib/ai/provider";
 import { ThemeConceptInput, themeConceptInputSchema } from "@/lib/dal/theme.dal";
 import { ExtractedDocumentData } from "@/lib/dal/documents.dal";
+import type { EventRow } from "@/lib/dal/events.dal";
+import type { BudgetCategoryRow } from "@/lib/dal/budget.dal";
+import type { TaskRow } from "@/lib/dal/tasks.dal";
 
 export {
   recommendProcessHours,
@@ -242,9 +245,9 @@ CRITICAL RULES:
    * Conversational Planning Copilot with contextual event intelligence and actionable proposal synthesis
    */
   static async chatCopilot(params: {
-    event: Record<string, unknown>;
-    categories: Record<string, unknown>[];
-    tasks: Record<string, unknown>[];
+    event: EventRow | Record<string, unknown>;
+    categories: (BudgetCategoryRow | Record<string, unknown>)[];
+    tasks: (TaskRow | Record<string, unknown>)[];
     userMessage: string;
     conversationHistory: { sender: string; content: string }[];
   }): Promise<{ reply: string; proposal?: CopilotActionProposal } | null> {
@@ -253,24 +256,31 @@ CRITICAL RULES:
 
     const model = await this.resolveTextModel(apiKey);
 
+    const ev = params.event as Record<string, unknown>;
     const eventSummary = {
-      title: params.event.title,
-      type: params.event.event_type,
-      budget: params.event.total_budget,
-      currency: params.event.currency,
-      guestCount: params.event.guest_count,
-      categories: params.categories.map((c) => ({
-        id: c.id,
-        name: c.name,
-        allocated: c.allocated_amount,
-      })),
-      tasks: params.tasks.slice(0, 15).map((t) => ({
-        id: t.id,
-        title: t.title,
-        dueDate: t.due_date,
-        priority: t.priority,
-        status: t.status,
-      })),
+      title: ev.title,
+      type: ev.event_type,
+      budget: ev.total_budget,
+      currency: ev.currency,
+      guestCount: ev.guest_count,
+      categories: params.categories.map((c) => {
+        const cat = c as Record<string, unknown>;
+        return {
+          id: cat.id,
+          name: cat.name,
+          allocated: cat.allocated_amount,
+        };
+      }),
+      tasks: params.tasks.slice(0, 15).map((t) => {
+        const task = t as Record<string, unknown>;
+        return {
+          id: task.id,
+          title: task.title,
+          dueDate: task.due_date,
+          priority: task.priority,
+          status: task.status,
+        };
+      }),
     };
 
     const systemPrompt = `You are Planista's Lead Event Planning Copilot, an expert AI partner helping the planner coordinate their event with data-driven precision.

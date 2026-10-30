@@ -7,10 +7,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { DocumentsDAL } from "@/lib/dal/documents.dal";
 import { GroqClient } from "@/lib/ai/groq";
-import { type Json } from "@/types/database.types";
 
 /**
  * Uploads a vendor quote or invoice document, extracting line items and verifying budget caps.
@@ -75,27 +74,17 @@ export async function uploadDocumentAction(eventId: string, formData: FormData):
       }
     }
 
-    const supabase = await createClient();
-
-    // 3. Insert into uploaded_documents table
-    const { data: doc, error: insertError } = await supabase
-      .from("uploaded_documents")
-      .insert({
-        event_id: eventId,
-        file_name: file.name,
-        file_url: `/documents/${eventId}/${file.name}`,
-        file_size_bytes: file.size,
-        mime_type: file.type,
-        document_type: extractedData.documentType,
-        extraction_status: "pending",
-        extracted_data: extractedData as unknown as Json,
-      })
-      .select()
-      .single();
-
-    if (insertError || !doc) {
-      throw new Error(`Failed to save document metadata: ${insertError?.message}`);
-    }
+    // 3. Insert into uploaded_documents table via DAL
+    const doc = await DocumentsDAL.createUploadedDocument({
+      eventId,
+      fileName: file.name,
+      fileUrl: `/documents/${eventId}/${file.name}`,
+      fileSizeBytes: file.size,
+      mimeType: file.type,
+      documentType: extractedData.documentType,
+      extractionStatus: "pending",
+      extractedData,
+    });
 
     createdDocId = doc.id;
   } catch (err: unknown) {

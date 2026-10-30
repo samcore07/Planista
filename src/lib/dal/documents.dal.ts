@@ -52,6 +52,41 @@ export class DocumentsDAL {
     return data || [];
   }
 
+  static async createUploadedDocument(params: {
+    eventId: string;
+    fileName: string;
+    fileUrl: string;
+    fileSizeBytes: number;
+    mimeType: string;
+    documentType: DocumentType;
+    extractionStatus?: ExtractionStatus;
+    extractedData: ExtractedDocumentData;
+  }): Promise<DocumentRow> {
+    const user = await getAuthenticatedUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const supabase = await createClient();
+    const { data: doc, error: insertError } = await supabase
+      .from("uploaded_documents")
+      .insert({
+        event_id: params.eventId,
+        file_name: params.fileName,
+        file_url: params.fileUrl,
+        file_size_bytes: params.fileSizeBytes,
+        mime_type: params.mimeType,
+        document_type: params.documentType,
+        extraction_status: params.extractionStatus ?? "pending",
+        extracted_data: params.extractedData as unknown as Json,
+      })
+      .select()
+      .single();
+
+    if (insertError || !doc) {
+      throw new Error(`Failed to save document metadata: ${insertError?.message}`);
+    }
+    return doc;
+  }
+
   static async getDocumentById(documentId: string): Promise<DocumentRow | null> {
     const user = await getAuthenticatedUser();
     if (!user) throw new Error("Unauthorized");
