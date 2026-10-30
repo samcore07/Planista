@@ -41,11 +41,19 @@ export function parseAuthTokenPayload(cookiesList: TokenCookieItem[]): DecodedAu
     if (chunkMatch) {
       const baseName = chunkMatch[1];
       const idx = Number.parseInt(chunkMatch[2], 10);
-      if (!chunkGroups.has(baseName)) chunkGroups.set(baseName, []);
-      chunkGroups.get(baseName)!.push({ idx, value: c.value });
+      const existingGroup = chunkGroups.get(baseName);
+      if (existingGroup) {
+        existingGroup.push({ idx, value: c.value });
+      } else {
+        chunkGroups.set(baseName, [{ idx, value: c.value }]);
+      }
     } else {
-      if (!chunkGroups.has(c.name)) chunkGroups.set(c.name, []);
-      chunkGroups.get(c.name)!.push({ idx: 0, value: c.value });
+      const existingGroup = chunkGroups.get(c.name);
+      if (existingGroup) {
+        existingGroup.push({ idx: 0, value: c.value });
+      } else {
+        chunkGroups.set(c.name, [{ idx: 0, value: c.value }]);
+      }
     }
   }
 

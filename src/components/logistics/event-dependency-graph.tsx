@@ -35,11 +35,19 @@ export function EventDependencyGraph({ graphData }: EventDependencyGraphProps) {
     const outgoing = new Map<string, string[]>();
 
     for (const edge of graphData.edges) {
-      if (!incoming.has(edge.toId)) incoming.set(edge.toId, []);
-      incoming.get(edge.toId)!.push(edge.fromId);
+      const inc = incoming.get(edge.toId);
+      if (inc) {
+        inc.push(edge.fromId);
+      } else {
+        incoming.set(edge.toId, [edge.fromId]);
+      }
 
-      if (!outgoing.has(edge.fromId)) outgoing.set(edge.fromId, []);
-      outgoing.get(edge.fromId)!.push(edge.toId);
+      const out = outgoing.get(edge.fromId);
+      if (out) {
+        out.push(edge.toId);
+      } else {
+        outgoing.set(edge.fromId, [edge.toId]);
+      }
     }
 
     return { incoming, outgoing };

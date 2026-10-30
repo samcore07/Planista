@@ -71,6 +71,7 @@ export function EventSwitcher({ currentEvent, allEvents }: EventSwitcherProps) {
               const isSelected = evt.id === currentEvent.id;
               return (
                 <button
+                  type="button"
                   key={evt.id}
                   role="option"
                   aria-selected={isSelected}
