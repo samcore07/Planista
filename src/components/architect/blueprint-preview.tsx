@@ -31,6 +31,9 @@ import {
   ColorModal,
   RiskModal,
 } from "./preview";
+import { Store } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface BlueprintPreviewProps {
   blueprint: EventBlueprint;
@@ -186,7 +189,14 @@ export function BlueprintPreview({
   const isSaveBlockedByBudget = selectedSections.budget && isBudgetOver;
 
   // --- Handlers: Persist ---
+  const isPersistingRef = React.useRef(false);
+
   const handlePersist = async () => {
+    // Prevent duplicate submissions while an operation is already in-flight
+    if (isPersistingRef.current || isPersisting) {
+      return;
+    }
+
     if (isSaveBlockedByBudget) {
       setError(
         `Cannot save blueprint: Total budget allocations exceed target budget of ${currency} ${totalTargetBudget.toLocaleString()} by ${currency} ${overAmount.toLocaleString()} (${totalAllocatedPercent - 100}%). Please adjust category amounts to be within 100% before saving.`
@@ -194,22 +204,33 @@ export function BlueprintPreview({
       return;
     }
 
+    isPersistingRef.current = true;
     setIsPersisting(true);
     setError(null);
 
-    const result = await persistAcceptedBlueprintAction({
-      input,
-      blueprint,
-      selectedSections,
-    });
+    try {
+      const result = await persistAcceptedBlueprintAction({
+        input,
+        blueprint,
+        selectedSections,
+      });
 
-    if (!result.success || !result.eventId) {
-      setError(result.error || "Failed to persist accepted blueprint sections");
+      if (!result.success || !result.eventId) {
+        setError(result.error || "Failed to persist accepted blueprint sections");
+        return;
+      }
+
+      router.push(`/events/${result.eventId}`);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to persist accepted blueprint sections";
+      setError(message);
+    } finally {
+      isPersistingRef.current = false;
       setIsPersisting(false);
-      return;
     }
-
-    router.push(`/events/${result.eventId}`);
   };
 
   // --- Handlers: Overview ---
@@ -497,7 +518,81 @@ export function BlueprintPreview({
           onDeleteTask={handleDeleteTask}
         />
 
-        {/* 3. Theme & Aesthetic */}
+        {/* 3. Recommended Vendors */}
+        <Card
+          className={`transition-all ${
+            selectedSections.vendors ? "border-primary/50" : "opacity-60 border-border"
+          }`}
+        >
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 gap-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="sec-vendors"
+                aria-label="Include vendor recommendations"
+                checked={selectedSections.vendors}
+                onChange={() => toggleSection("vendors")}
+                className="h-4 w-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+              />
+              <div>
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Store className="h-4 w-4 text-primary" />
+                  Recommended Vendors ({(blueprint.vendorRequirements || []).length})
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Suggested vendor archetypes and estimated cost ranges
+                </CardDescription>
+              </div>
+            </div>
+            <Badge variant="secondary" className="text-xs">
+              {selectedSections.vendors ? "Accepted" : "Excluded"}
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            {(!blueprint.vendorRequirements || blueprint.vendorRequirements.length === 0) ? (
+              <div className="p-6 text-center text-xs text-muted-foreground border border-dashed rounded-md">
+                No vendor recommendations generated.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                {blueprint.vendorRequirements.map((v, i) => (
+                  <div
+                    key={i}
+                    className="p-3 rounded-md bg-secondary/40 border border-border/50 space-y-1.5 hover:border-primary/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-foreground">{v.nameRecommendation}</span>
+                      <Badge variant="outline" className="text-[10px]">
+                        {v.category}
+                      </Badge>
+                    </div>
+                    {v.notes && <p className="text-muted-foreground text-[11px]">{v.notes}</p>}
+                    <div className="flex items-center justify-between pt-1 border-t border-border/40 text-[11px]">
+                      <span className="text-muted-foreground">Estimated Range:</span>
+                      <span className="font-semibold text-primary">
+                        {currency} {Number(v.estimatedCostRange?.min || 0).toLocaleString()} &ndash; {currency} {Number(v.estimatedCostRange?.max || 0).toLocaleString()}
+                      </span>
+                    </div>
+                    {v.deliverables && v.deliverables.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1">
+                        {v.deliverables.map((d, dIdx) => (
+                          <span
+                            key={dIdx}
+                            className="bg-background/60 text-muted-foreground px-1.5 py-0.5 rounded text-[10px] border border-border/40"
+                          >
+                            {d}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 4. Theme & Aesthetic */}
         <BlueprintThemeSection
           theme={blueprint.theme}
           isSelected={selectedSections.theme}
@@ -508,7 +603,7 @@ export function BlueprintPreview({
           onDeleteColor={handleDeleteColor}
         />
 
-        {/* 4. Contingencies & Risks */}
+        {/* 5. Contingencies & Risks */}
         <BlueprintRisksSection
           contingencies={blueprint.contingencies}
           isSelected={selectedSections.risks}

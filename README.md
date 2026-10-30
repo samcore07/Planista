@@ -10,7 +10,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase_RLS-336791?style=flat-square&logo=postgresql)](https://supabase.com/)
 [![CI Pipeline](https://img.shields.io/badge/CI_Pipeline-Passing-brightgreen?style=flat-square&logo=githubactions)](.github/workflows/ci.yml)
 [![SonarCloud](https://img.shields.io/badge/SonarCloud-Grade_A_Passed-success?style=flat-square&logo=sonarcloud)](https://sonarcloud.io/)
-[![Tests](https://img.shields.io/badge/Tests-165%2F165_Passing-brightgreen?style=flat-square&logo=vitest)](https://vitest.dev/)
+[![Tests](https://img.shields.io/badge/Tests-193%2F193_Passing-brightgreen?style=flat-square&logo=vitest)](https://vitest.dev/)
 [![Accessibility](https://img.shields.io/badge/WCAG-2.2_AAA-success?style=flat-square)](https://www.w3.org/WAI/standards-guidelines/wcag/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
@@ -61,7 +61,7 @@ flowchart TD
     end
 
     subgraph Edge ["Edge & Security Boundary"]
-        Proxy["Proxy / Edge Middleware"]
+        Proxy["Next.js 16 Routing Proxy (proxy.ts)"]
         TokenCheck["Zero-Network JWT Payload Validator"]
         RLSCheck["Tenant Isolation Boundary"]
     end
@@ -131,7 +131,7 @@ Planista integrates eight purpose-built systems into a unified workspace:
 - **Styling & UI**: [Tailwind CSS v4](https://tailwindcss.com/), Radix UI Primitives, Lucide Icons
 - **AI Providers**: [Groq](https://groq.com/) (Llama 3.3 70B Versatile for reasoning, Llama 3.2 11B Vision for OCR)
 - **Validation**: [Zod](https://zod.dev/) for all client, server, and AI boundary contracts
-- **Testing**: [Vitest](https://vitest.dev/) (Unit/Integration, 163 tests) + [Playwright](https://playwright.dev/) (E2E)
+- **Testing**: [Vitest](https://vitest.dev/) (Unit/Integration, 193 tests across 28 suites) + [Playwright](https://playwright.dev/) (E2E)
 - **Accessibility**: WCAG 2.2 AAA Contrast compliance, full keyboard navigation, screen reader ARIA landmarks
 
 ---
@@ -140,36 +140,44 @@ Planista integrates eight purpose-built systems into a unified workspace:
 
 ```
 Planista/
+├── .github/
+│   └── workflows/ci.yml                    # Automated CI pipeline (lint, typecheck, test, build)
 ├── src/
 │   ├── app/                                # Next.js App Router routes & layouts
 │   │   ├── (auth)/                         # Auth flows (login, register, forgot-password)
 │   │   ├── dashboard/                      # Authenticated workspace dashboard (streaming PPR)
 │   │   ├── events/                         # Event creation, AI architect, and event workspaces
-│   │   │   └── [eventId]/                  # Event-specific modules (budget, timeline, theme, etc.)
+│   │   │   ├── [eventId]/                  # Event-specific modules (budget, timeline, theme, etc.)
+│   │   │   └── architect/                  # AI Architect intake & transactional persistence actions
 │   │   ├── api/                            # Server-only API endpoints (PDF/CSV exports)
 │   │   ├── layout.tsx                      # Root layout with accessibility and theme script
 │   │   └── page.tsx                        # High-performance landing page (100% static edge HTML)
 │   ├── components/                         # Modular React components
-│   │   ├── home/                           # Landing page navigation, facades, and showcase cards
+│   │   ├── architect/                      # Interactive Blueprint Preview, modals, and staging
+│   │   │   └── preview/                    # Decomposed sections (budget, tasks, vendors, theme, risks)
+│   │   ├── home/                           # Decomposed landing page navigation, facades, and showcase cards
 │   │   ├── theme/                          # Theme provider and accessible toggles
 │   │   ├── timeline/                       # Optimistic task cards, delay simulations, and task modals
 │   │   └── ui/                             # Radix UI design system primitives
 │   ├── config/                             # Centralized, Zod-validated environment configurations
 │   ├── lib/                                # Core libraries and data layers
-│   │   ├── ai/                             # Groq LLM client, prompt templates, and schema guards
+│   │   ├── ai/                             # Groq LLM client, normalizers, and schema guards
 │   │   ├── dal/                            # Data Access Layer (DAL) verifying session identity
-│   │   └── supabase/                       # Supabase client configurations and edge middleware
+│   │   └── supabase/                       # Supabase SSR client configurations and session helpers
 │   ├── services/                           # Pure deterministic domain logic (0 external side effects)
 │   │   ├── budget.service.ts               # Decimal-safe financial calculations
-│   │   ├── timeline.service.ts             # DAG schedule shifts and cycle detection
+│   │   ├── timeline.service.ts             # DAG schedule shifts and Kahn's cycle detection
+│   │   ├── logistics/                      # Decomposed logistics engines (CPM, capacity, manifests)
 │   │   ├── risk.service.ts                 # Explainable risk formulas and health indicators
 │   │   ├── orchestrator.service.ts         # Multi-entity state synchronization
 │   │   └── export.service.ts               # Printable PDF and CSV data formatters
-│   └── types/                              # Strict TypeScript declarations and Zod schemas
+│   ├── types/                              # Strict TypeScript declarations and Zod schemas
+│   └── proxy.ts                            # Next.js 16 Routing Proxy and session boundary
 ├── supabase/
 │   └── migrations/                         # Production SQL schemas, triggers, and RLS policies
 ├── e2e/                                    # Playwright end-to-end test suites
-└── vitest.config.mts                       # Vitest unit & integration test configuration
+├── vitest.config.mts                       # Vitest unit & integration test configuration
+└── .deepsource.toml                        # DeepSource code health and analysis configuration
 ```
 
 ---
@@ -276,12 +284,25 @@ npm run typecheck
 # 2. ESLint Code Cleanliness (0 errors, 0 warnings)
 npm run lint
 
-# 3. Vitest Unit & Integration Test Suite (165 tests across 25 suites)
+# 3. Vitest Unit & Integration Test Suite (193 tests across 28 suites)
 npm test
 
 # 4. Production Next.js Build Verification
 npm run build
 ```
+
+### Available npm Scripts
+
+| Script | Command | Purpose |
+| :--- | :--- | :--- |
+| `npm run dev` | `next dev --webpack -p 3000` | Start local development server on port 3000 |
+| `npm run build` | `next build --webpack` | Build optimized production bundle |
+| `npm start` | `next start` | Start production server |
+| `npm run lint` | `eslint` | Run ESLint static analysis (0 warnings) |
+| `npm run typecheck` | `tsc --noEmit` | Run strict TypeScript compiler verification (0 errors) |
+| `npm test` | `vitest run` | Run all 193 unit and integration tests across 28 suites |
+| `npm run test:watch` | `vitest` | Run Vitest in interactive watch mode |
+| `npm run test:e2e` | `playwright test` | Execute browser automated end-to-end tests |
 
 ### Static Analysis & Quality Gate Compliance
 
@@ -303,7 +324,7 @@ npm run test:e2e
 
 ## Performance & Optimization Highlights
 
-- **Server Response Time (TTFB < 200ms)**: Zero-network JWT session reconstruction in Edge Middleware and Server Components eliminates up to 1.4s of redundant auth roundtrips per navigation.
+- **Server Response Time (TTFB < 200ms)**: Zero-network JWT session reconstruction in Next.js 16 Routing Proxy (`proxy.ts`) and Server Components eliminates up to 1.4s of redundant auth roundtrips per navigation.
 - **Zero-Latency Optimistic Timeline**: Checkboxes flip and strike through tasks in 0ms using React 19's `useOptimistic` hook, syncing database state and event health in the background.
 - **Partial Prerendering (PPR)**: The dashboard layout, navigation shell, and skeleton states stream to the browser immediately, ensuring First Contentful Paint (FCP) in < 150ms.
 - **Zero Forced Reflows**: Mobile viewport auto-zoom prevented via responsive 16px form inputs; CSS scroll padding moved off `<html>` to eliminate browser layout thrashing.

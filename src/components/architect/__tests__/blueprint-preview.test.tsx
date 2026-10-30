@@ -5,15 +5,17 @@
 
 import React from "react";
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { BlueprintPreview } from "../blueprint-preview";
 import { EventBlueprint } from "@/types/blueprint.types";
 import { BlueprintGenerationInput } from "@/lib/ai/provider";
+import { persistAcceptedBlueprintAction } from "@/app/events/architect/actions";
 
 // Mock next/navigation
+const mockPush = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: mockPush,
     refresh: vi.fn(),
   }),
 }));
@@ -229,5 +231,187 @@ describe("BlueprintPreview Component", () => {
     const adjustBtn = screen.getByRole("button", { name: /Adjust & Regenerate/i });
     fireEvent.click(adjustBtn);
     expect(onReset).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders recommended vendors section with vendor recommendations and cost range", () => {
+    render(
+      <BlueprintPreview
+        blueprint={mockBlueprint}
+        input={mockInput}
+        onReset={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("AV Production Specialist")).toBeTruthy();
+    expect(screen.getByText("Audio/Visual")).toBeTruthy();
+    expect(screen.getByText(/Stage lighting/i)).toBeTruthy();
+    expect(screen.getByText(/Multi-mic audio mixing/i)).toBeTruthy();
+    expect(screen.getByText(/Requires pre-conference rehearsal/i)).toBeTruthy();
+    expect(screen.getByRole("checkbox", { name: /Include vendor recommendations/i })).toBeTruthy();
+  });
+
+  it("toggles vendor section inclusion and updates accepted/excluded status", () => {
+    render(
+      <BlueprintPreview
+        blueprint={mockBlueprint}
+        input={mockInput}
+        onReset={vi.fn()}
+      />
+    );
+
+    const vendorCheckbox = screen.getByRole("checkbox", {
+      name: /Include vendor recommendations/i,
+    }) as HTMLInputElement;
+    expect(vendorCheckbox.checked).toBe(true);
+
+    fireEvent.click(vendorCheckbox);
+    expect(vendorCheckbox.checked).toBe(false);
+
+    fireEvent.click(vendorCheckbox);
+    expect(vendorCheckbox.checked).toBe(true);
+  });
+
+  it("persists blueprint successfully and navigates to the event page", async () => {
+    const mockPersist = vi.mocked(persistAcceptedBlueprintAction);
+    mockPersist.mockResolvedValueOnce({ success: true, eventId: "persisted-event-456" });
+
+    render(
+      <BlueprintPreview
+        blueprint={mockBlueprint}
+        input={mockInput}
+        onReset={vi.fn()}
+      />
+    );
+
+    const saveBtn = screen.getByRole("button", { name: /Accept & Open Event/i });
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+
+    await vi.waitFor(() => {
+      expect(mockPersist).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledWith("/events/persisted-event-456");
+    });
+  });
+
+  it("handles returned failure responses from persist action and displays error", async () => {
+    const mockPersist = vi.mocked(persistAcceptedBlueprintAction);
+    mockPersist.mockResolvedValueOnce({ success: false, error: "Database lock timeout error" });
+
+    render(
+      <BlueprintPreview
+        blueprint={mockBlueprint}
+        input={mockInput}
+        onReset={vi.fn()}
+      />
+    );
+
+    const saveBtn = screen.getByRole("button", { name: /Accept & Open Event/i });
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+
+    await vi.waitFor(() => {
+      expect(screen.getByText("Database lock timeout error")).toBeTruthy();
+    });
+  });
+
+  it("handles rejected server action promises without crashing and resets isPersisting state", async () => {
+    const mockPersist = vi.mocked(persistAcceptedBlueprintAction);
+    mockPersist.mockRejectedValueOnce(new Error("Network connection dropped"));
+
+    render(
+      <BlueprintPreview
+        blueprint={mockBlueprint}
+        input={mockInput}
+        onReset={vi.fn()}
+      />
+    );
+
+    const saveBtn = screen.getByRole("button", { name: /Accept & Open Event/i });
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+
+    await vi.waitFor(() => {
+      expect(screen.getByText("Network connection dropped")).toBeTruthy();
+    });
+
+    // Verify button is re-enabled and state is reset
+    expect((saveBtn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("prevents duplicate persistence submissions while an operation is running", async () => {
+    const mockPersist = vi.mocked(persistAcceptedBlueprintAction);
+    let resolvePromise: (val: { success: boolean; eventId: string }) => void;
+    const slowPromise = new Promise<{ success: boolean; eventId: string }>((resolve) => {
+      resolvePromise = resolve;
+    });
+    mockPersist.mockImplementationOnce(() => slowPromise);
+
+    render(
+      <BlueprintPreview
+        blueprint={mockBlueprint}
+        input={mockInput}
+        onReset={vi.fn()}
+      />
+    );
+
+    const saveBtn = screen.getByRole("button", { name: /Accept & Open Event/i });
+
+    // First click initiates request
+    await act(async () => {
+      fireEvent.click(saveBtn);
+      // Rapid duplicate click while in-flight
+      fireEvent.click(saveBtn);
+    });
+
+    expect(mockPersist).toHaveBeenCalledTimes(1);
+
+    // Resolve the in-flight request
+    await act(async () => {
+      resolvePromise!({ success: true, eventId: "event-dedup-789" });
+    });
+
+    await vi.waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith("/events/event-dedup-789");
+    });
+  });
+
+  it("passes selectedSections.vendors = false when vendor section is untoggled", async () => {
+    const mockPersist = vi.mocked(persistAcceptedBlueprintAction);
+    mockPersist.mockResolvedValueOnce({ success: true, eventId: "event-no-vendors-123" });
+
+    render(
+      <BlueprintPreview
+        blueprint={mockBlueprint}
+        input={mockInput}
+        onReset={vi.fn()}
+      />
+    );
+
+    const vendorCheckbox = screen.getByRole("checkbox", {
+      name: /Include vendor recommendations/i,
+    });
+    fireEvent.click(vendorCheckbox); // Untoggle vendors
+
+    const saveBtn = screen.getByRole("button", { name: /Accept & Open Event/i });
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+
+    await vi.waitFor(() => {
+      expect(mockPersist).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selectedSections: expect.objectContaining({
+            vendors: false,
+            budget: true,
+            tasks: true,
+            theme: true,
+            risks: true,
+          }),
+        })
+      );
+    });
   });
 });
