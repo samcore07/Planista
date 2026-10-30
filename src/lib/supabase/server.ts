@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient, type User } from "@supabase/supab
 import { cookies } from "next/headers";
 import { type Database } from "@/types/database.types";
 import { env } from "@/config/env";
+import { parseAuthTokenPayload } from "./token-parser";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -59,78 +60,39 @@ export function createAdminClient() {
 function extractUserFromTokenCookies(
   cookiesList: { name: string; value: string }[]
 ): User | null {
-  const chunkGroups = new Map<string, Array<{ idx: number; value: string }>>();
-
-  for (const c of cookiesList) {
-    if (!c.name.includes("-auth-token") && !c.name.startsWith("sb-")) {
-      continue;
-    }
-    const chunkMatch = c.name.match(/^(.*)\.(\d+)$/);
-    if (chunkMatch) {
-      const baseName = chunkMatch[1];
-      const idx = Number.parseInt(chunkMatch[2], 10);
-      if (!chunkGroups.has(baseName)) chunkGroups.set(baseName, []);
-      chunkGroups.get(baseName)!.push({ idx, value: c.value });
-    } else {
-      if (!chunkGroups.has(c.name)) chunkGroups.set(c.name, []);
-      chunkGroups.get(c.name)!.push({ idx: 0, value: c.value });
-    }
-  }
-
-  for (const [, chunks] of chunkGroups) {
-    try {
-      chunks.sort((a, b) => a.idx - b.idx);
-      let combined = chunks.map((c) => c.value).join("");
-      if (combined.startsWith("base64-")) {
-        combined = Buffer.from(combined.slice(7), "base64").toString("utf8");
-      }
-      const parsed = JSON.parse(combined);
-      const token = Array.isArray(parsed) ? parsed[0] : (parsed.access_token || parsed);
-      if (typeof token === "string" && token.includes(".")) {
-        const parts = token.split(".");
-        if (parts.length >= 2) {
-          let b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-          while (b64.length % 4 !== 0) b64 += "=";
-          const payload = JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
-          if (
-            payload &&
-            typeof payload.exp === "number" &&
-            typeof payload.sub === "string" &&
-            payload.exp * 1000 > Date.now() + 60000
-          ) {
-            return {
-              id: payload.sub,
-              app_metadata: payload.app_metadata || {},
-              user_metadata: payload.user_metadata || {},
-              aud: payload.aud || "authenticated",
-              confirmation_sent_at: "",
-              recovery_sent_at: "",
-              email_change_sent_at: "",
-              new_email: "",
-              invited_at: "",
-              action_link: "",
-              email: payload.email || undefined,
-              phone: payload.phone || "",
-              created_at:
-                payload.created_at ||
-                (payload.iat
-                  ? new Date(payload.iat * 1000).toISOString()
-                  : new Date().toISOString()),
-              confirmed_at: payload.confirmed_at,
-              email_confirmed_at: payload.email_confirmed_at,
-              phone_confirmed_at: payload.phone_confirmed_at,
-              last_sign_in_at: payload.last_sign_in_at,
-              role: payload.role || "authenticated",
-              updated_at: payload.updated_at || "",
-              identities: [],
-              factors: [],
-            } as User;
-          }
-        }
-      }
-    } catch {
-      // Fall through to remote verification
-    }
+  const payload = parseAuthTokenPayload(cookiesList);
+  if (
+    payload &&
+    typeof payload.exp === "number" &&
+    typeof payload.sub === "string" &&
+    payload.exp * 1000 > Date.now() + 60000
+  ) {
+    return {
+      id: payload.sub,
+      app_metadata: payload.app_metadata || {},
+      user_metadata: payload.user_metadata || {},
+      aud: payload.aud || "authenticated",
+      confirmation_sent_at: "",
+      recovery_sent_at: "",
+      email_change_sent_at: "",
+      new_email: "",
+      invited_at: "",
+      action_link: "",
+      email: payload.email || undefined,
+      phone: payload.phone || "",
+      created_at:
+        (typeof payload.created_at === "string" ? payload.created_at : "") ||
+        new Date().toISOString(),
+      confirmed_at:
+        typeof payload.confirmed_at === "string" ? payload.confirmed_at : undefined,
+      last_sign_in_at:
+        typeof payload.last_sign_in_at === "string" ? payload.last_sign_in_at : undefined,
+      role: payload.role || "authenticated",
+      updated_at:
+        (typeof payload.updated_at === "string" ? payload.updated_at : "") || "",
+      identities: [],
+      factors: [],
+    } as User;
   }
 
   return null;
