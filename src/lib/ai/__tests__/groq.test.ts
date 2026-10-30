@@ -17,11 +17,12 @@ describe("GroqClient Integration & Fallback", () => {
 
   beforeEach(() => {
     delete process.env.GROQ_API_KEY;
-    vi.restoreAllMocks();
+    vi.spyOn(GroqClient, "getApiKey").mockReturnValue(undefined);
   });
 
   afterEach(() => {
     process.env.GROQ_API_KEY = originalEnv;
+    vi.restoreAllMocks();
   });
 
   it("reports not configured when GROQ_API_KEY is not set", () => {
@@ -29,7 +30,7 @@ describe("GroqClient Integration & Fallback", () => {
   });
 
   it("reports configured when a valid GROQ_API_KEY is present", () => {
-    process.env.GROQ_API_KEY = "gsk_test_1234567890abcdef12345";
+    vi.spyOn(GroqClient, "getApiKey").mockReturnValue("gsk_test_1234567890abcdef12345");
     expect(GroqClient.isConfigured()).toBe(true);
   });
 

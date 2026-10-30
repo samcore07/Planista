@@ -19,8 +19,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "mock-anon-key-for-ci-verification"
       SUPABASE_SERVICE_ROLE_KEY: "mock-service-role-key-for-ci-verification"
       NEXT_PUBLIC_APP_URL: "http://localhost:3000"
-      GROQ_API_KEY: "mock-groq-key-ci"
-      GEMINI_API_KEY: "mock-gemini-key-ci"
+      GROQ_API_KEY: "placeholder-groq-key"
+      GEMINI_API_KEY: "placeholder-gemini-key"
 
     steps:
       - name: Checkout repository

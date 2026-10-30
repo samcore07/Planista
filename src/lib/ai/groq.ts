@@ -34,13 +34,18 @@ let cachedTextModel: string | null = null;
 
 export class GroqClient {
   static getApiKey(): string | undefined {
-    const raw = process.env.GROQ_API_KEY || env.GROQ_API_KEY;
+    const raw = process.env.GROQ_API_KEY ?? env.GROQ_API_KEY;
     return raw ? raw.trim() : undefined;
   }
 
   static isConfigured(): boolean {
     const key = this.getApiKey();
-    return !!key && !key.includes("placeholder") && key.trim().length > 10;
+    return (
+      !!key &&
+      !key.includes("placeholder") &&
+      !key.includes("mock-") &&
+      key.trim().length > 10
+    );
   }
 
   /**
