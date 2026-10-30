@@ -103,16 +103,17 @@ export function TaskCard({
 
           <div className="space-y-1.5 flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span
+              <button
+                type="button"
                 onClick={handleToggle}
-                className={`text-sm font-semibold tracking-tight cursor-pointer select-none transition-all duration-150 ${
+                className={`text-left text-sm font-semibold tracking-tight cursor-pointer select-none transition-all duration-150 p-0 bg-transparent border-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-xs ${
                   isCompleted
                     ? "line-through text-muted-foreground font-normal"
                     : "text-foreground hover:text-primary"
                 }`}
               >
                 {task.title}
-              </span>
+              </button>
 
               <Badge
                 variant={

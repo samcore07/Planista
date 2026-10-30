@@ -880,8 +880,10 @@ export function BlueprintPreview({ blueprint: initialBlueprint, input, onReset }
                     key={i}
                     className="group relative flex items-center gap-1.5 p-1.5 rounded border border-border bg-card shadow-xs"
                   >
-                    <div
-                      className="h-5 w-5 rounded-sm border border-black/10 shrink-0 cursor-pointer"
+                    <button
+                      type="button"
+                      aria-label={`Edit ${swatch.name} swatch`}
+                      className="h-5 w-5 rounded-sm border border-black/10 shrink-0 cursor-pointer p-0"
                       style={{ backgroundColor: swatch.hex }}
                       onClick={() => openEditColorModal(i)}
                       title="Click to edit color"

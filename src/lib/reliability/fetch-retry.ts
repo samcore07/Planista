@@ -72,8 +72,8 @@ export async function fetchWithRetryAndTimeout(
         let delayMs = calculateBackoff(attempt, config.initialDelayMs, config.maxDelayMs);
 
         if (retryAfterHeader) {
-          const parsedSeconds = parseInt(retryAfterHeader, 10);
-          if (!isNaN(parsedSeconds) && parsedSeconds > 0) {
+          const parsedSeconds = Number.parseInt(retryAfterHeader, 10);
+          if (!Number.isNaN(parsedSeconds) && parsedSeconds > 0) {
             delayMs = Math.min(parsedSeconds * 1000, config.maxDelayMs);
           }
         }

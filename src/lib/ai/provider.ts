@@ -304,7 +304,7 @@ You must return valid JSON matching the exact schema with overview, budgetAlloca
     // Context-aware intent detection
     if (text.includes("reduce") || text.includes("cut") || text.includes("save")) {
       const match = text.match(/\d+[\d,]*/);
-      const amount = match ? parseFloat(match[0].replace(/,/g, "")) : 1000;
+      const amount = match ? Number.parseFloat(match[0].replace(/,/g, "")) : 1000;
 
       return {
         actionType: "adjust_budget",

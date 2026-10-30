@@ -31,7 +31,11 @@ export function cleanJsonString(raw: string): string {
   let cleaned = raw.trim();
   // Strip markdown code fences like ```json ... ``` or ``` ... ```
   if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?\s*```$/, "");
+    cleaned = cleaned.replace(/^```[a-zA-Z0-9_-]*\r?\n?/, "");
+    const lastFence = cleaned.lastIndexOf("```");
+    if (lastFence !== -1) {
+      cleaned = cleaned.slice(0, lastFence);
+    }
   }
   // If there's extra text before the first '{' and after the last '}'
   const firstBrace = cleaned.indexOf("{");

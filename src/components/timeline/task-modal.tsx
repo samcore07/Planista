@@ -35,9 +35,9 @@ export function TaskModal({ eventId, task, trigger }: TaskModalProps) {
   const handleSubmit = (formData: FormData) => {
     setIsOpen(false);
     if (isEditing && task) {
-      updateTaskAction(eventId, task.id, formData);
+      void updateTaskAction(eventId, task.id, formData);
     } else {
-      createTaskAction(eventId, formData);
+      void createTaskAction(eventId, formData);
     }
   };
 

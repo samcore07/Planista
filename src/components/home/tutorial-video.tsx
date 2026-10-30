@@ -72,7 +72,7 @@ export function TutorialVideo() {
       try {
         iframeRef.current.contentWindow?.postMessage(
           JSON.stringify({ event: "command", func: "stopVideo", args: "" }),
-          "*"
+          "https://www.youtube-nocookie.com"
         );
         iframeRef.current.src = "about:blank";
       } catch {
@@ -114,7 +114,7 @@ export function TutorialVideo() {
         try {
           iframe.contentWindow?.postMessage(
             JSON.stringify({ event: "command", func: "stopVideo", args: "" }),
-            "*"
+            "https://www.youtube-nocookie.com"
           );
           iframe.src = "about:blank";
         } catch {
@@ -132,15 +132,15 @@ export function TutorialVideo() {
       try {
         iframeRef.current.contentWindow?.postMessage(
           JSON.stringify({ event: "command", func: "seekTo", args: [seconds, true] }),
-          "*"
+          "https://www.youtube-nocookie.com"
         );
         iframeRef.current.contentWindow?.postMessage(
           JSON.stringify({ event: "command", func: "setPlaybackQuality", args: ["hd1080"] }),
-          "*"
+          "https://www.youtube-nocookie.com"
         );
         iframeRef.current.contentWindow?.postMessage(
           JSON.stringify({ event: "command", func: "playVideo", args: "" }),
-          "*"
+          "https://www.youtube-nocookie.com"
         );
       } catch {
         // Ignore cross-origin errors
@@ -205,7 +205,7 @@ export function TutorialVideo() {
                 try {
                   iframeRef.current?.contentWindow?.postMessage(
                     JSON.stringify({ event: "command", func: "setPlaybackQuality", args: ["hd1080"] }),
-                    "*"
+                    "https://www.youtube-nocookie.com"
                   );
                 } catch {
                   // Ignore

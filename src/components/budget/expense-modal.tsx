@@ -79,9 +79,9 @@ export function ExpenseModal({ eventId, categories, expense, trigger }: ExpenseM
   const handleSubmit = (formData: FormData) => {
     setIsOpen(false);
     if (isEditing && expense) {
-      updateExpenseAction(eventId, expense.id, formData);
+      void updateExpenseAction(eventId, expense.id, formData);
     } else {
-      createExpenseAction(eventId, formData);
+      void createExpenseAction(eventId, formData);
     }
   };
 

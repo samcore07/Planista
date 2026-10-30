@@ -19,7 +19,7 @@ function getAuthTokenPayload(request: NextRequest): { exp: number; sub: string; 
     const chunkMatch = c.name.match(/^(.*)\.(\d+)$/);
     if (chunkMatch) {
       const baseName = chunkMatch[1];
-      const idx = parseInt(chunkMatch[2], 10);
+      const idx = Number.parseInt(chunkMatch[2], 10);
       if (!chunkGroups.has(baseName)) chunkGroups.set(baseName, []);
       chunkGroups.get(baseName)!.push({ idx, value: c.value });
     } else {

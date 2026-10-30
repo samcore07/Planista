@@ -283,7 +283,7 @@ export function CopilotDrawer({ eventId, initialHistory }: CopilotDrawerProps) {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleSend(inputValue);
+                  void handleSend(inputValue);
                 }}
                 className="flex items-center gap-2"
               >

@@ -29,7 +29,7 @@ export function CategoryModal({ eventId }: CategoryModalProps) {
 
   const handleSubmit = (formData: FormData) => {
     setIsOpen(false);
-    createCategoryAction(eventId, formData);
+    void createCategoryAction(eventId, formData);
   };
 
   return (

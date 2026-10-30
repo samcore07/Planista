@@ -239,9 +239,16 @@ export function EventDependencyGraph({ graphData }: EventDependencyGraphProps) {
                 : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30";
 
             return (
-              <div
+              <button
+                type="button"
                 key={node.id}
                 onClick={() => setSelectedNode(node)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedNode(node);
+                  }
+                }}
                 onMouseEnter={() => setHoveredNodeId(node.id)}
                 onMouseLeave={() => setHoveredNodeId(null)}
                 style={{
@@ -250,8 +257,8 @@ export function EventDependencyGraph({ graphData }: EventDependencyGraphProps) {
                   width: "160px",
                 }}
                 className={cn(
-                  "absolute rounded-xl border p-2.5 text-xs transition-all duration-200 cursor-pointer select-none",
-                  "bg-card/95 backdrop-blur-md shadow-md",
+                  "absolute text-left rounded-xl border p-2.5 text-xs transition-all duration-200 cursor-pointer select-none",
+                  "bg-card/95 backdrop-blur-md shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                   node.isCritical
                     ? "border-rose-500/60 ring-1 ring-rose-500/30"
                     : "border-border/70 hover:border-primary/50",
@@ -278,9 +285,9 @@ export function EventDependencyGraph({ graphData }: EventDependencyGraphProps) {
                 </div>
 
                 {/* Node Title */}
-                <h4 className="font-medium text-[11px] text-foreground leading-snug line-clamp-2">
+                <span className="block font-medium text-[11px] text-foreground leading-snug line-clamp-2">
                   {node.title}
-                </h4>
+                </span>
 
                 {/* Category & Critical Indicator */}
                 <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground pt-1 border-t border-border/40">
@@ -296,7 +303,7 @@ export function EventDependencyGraph({ graphData }: EventDependencyGraphProps) {
                     </span>
                   )}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
