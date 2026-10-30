@@ -4,7 +4,7 @@ import {
   eventBlueprintSchema,
   EventBlueprint,
 } from "@/types/blueprint.types";
-import { BlueprintGenerationInput, CopilotActionProposal } from "@/lib/ai/provider";
+import { BlueprintGenerationInput, CopilotActionProposal } from "./ai.types";
 import { ThemeConceptInput, themeConceptInputSchema } from "@/lib/dal/theme.dal";
 import { ExtractedDocumentData } from "@/lib/dal/documents.dal";
 import type { EventRow } from "@/lib/dal/events.dal";

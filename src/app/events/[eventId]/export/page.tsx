@@ -5,7 +5,7 @@ import { EventsDAL } from "@/lib/dal/events.dal";
 import { BudgetDAL } from "@/lib/dal/budget.dal";
 import { TasksDAL } from "@/lib/dal/tasks.dal";
 import { RiskDAL } from "@/lib/dal/risk.dal";
-import { createClient } from "@/lib/supabase/server";
+import { VendorsDAL } from "@/lib/dal/vendors.dal";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,17 +35,13 @@ export default async function ExportPage({ params }: PageProps) {
   const event = await EventsDAL.getEventById(eventId);
   if (!event) redirect("/dashboard");
 
-  const supabase = await createClient();
-
-  const [categories, expenses, tasks, risks, vendorsResult] = await Promise.all([
+  const [categories, expenses, tasks, risks, vendors] = await Promise.all([
     BudgetDAL.getCategories(eventId),
     BudgetDAL.getExpenses(eventId),
     TasksDAL.getTasks(eventId),
     RiskDAL.getRisks(eventId),
-    supabase.from("vendors").select("*").eq("event_id", eventId),
+    VendorsDAL.getVendors(eventId),
   ]);
-
-  const vendors = vendorsResult.data || [];
 
   const totalSpent = expenses.reduce((sum, e) => sum + Number(e.actual_amount || 0), 0);
   const completedTasks = tasks.filter((t) => t.status === "completed").length;

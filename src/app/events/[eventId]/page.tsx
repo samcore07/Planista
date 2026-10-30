@@ -226,7 +226,7 @@ async function EventOverviewContent({ params }: EventPageProps) {
             </div>
             <Progress value={timelineMetrics.completionPercentage} className="h-1.5" />
             <div className="flex justify-between text-[11px] text-muted-foreground">
-              <span>{timelineMetrics.pendingTasks.length} pending</span>
+              <span>{timelineMetrics.pendingTasks.length + timelineMetrics.inProgressTasks.length} pending / in progress</span>
               {timelineMetrics.overdueTasks.length > 0 && (
                 <span className="text-destructive font-medium">
                   {timelineMetrics.overdueTasks.length} overdue

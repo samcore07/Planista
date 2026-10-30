@@ -1,23 +1,15 @@
-import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
-import { EventsDAL, EventRow } from "@/lib/dal/events.dal";
-import { BudgetDAL, BudgetCategoryRow, ExpenseRow } from "@/lib/dal/budget.dal";
-import { TasksDAL, TaskRow } from "@/lib/dal/tasks.dal";
-import { RiskDAL, RiskRow } from "@/lib/dal/risk.dal";
-import { Database } from "@/types/database.types";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
+import { EventsDAL } from "@/lib/dal/events.dal";
+import { BudgetDAL } from "@/lib/dal/budget.dal";
+import { TasksDAL } from "@/lib/dal/tasks.dal";
+import { RiskDAL } from "@/lib/dal/risk.dal";
+import { VendorsDAL } from "@/lib/dal/vendors.dal";
+import { DocumentsDAL } from "@/lib/dal/documents.dal";
 import { ExportCsvBuilder } from "./export/export-csv.builder";
 import { ExportHtmlBuilder } from "./export/export-html.builder";
+import type { EventExportBundle, VendorRow } from "./export/export.types";
 
-export type VendorRow = Database["public"]["Tables"]["vendors"]["Row"];
-
-export interface EventExportBundle {
-  event: EventRow;
-  categories: BudgetCategoryRow[];
-  expenses: ExpenseRow[];
-  tasks: TaskRow[];
-  risks: RiskRow[];
-  vendors: VendorRow[];
-  generatedAt: string;
-}
+export type { EventExportBundle, VendorRow };
 
 // In-memory mutex for preventing concurrent duplicate export jobs
 const activeExportJobs = new Set<string>();
@@ -52,21 +44,21 @@ export class ExportService {
     const event = await EventsDAL.getEventById(eventId);
     if (!event) throw new Error("Event not found or access denied");
 
-    const supabase = await createClient();
-
-    const [categories, expenses, tasks, risks, vendorsResult, documentsResult] = await Promise.all([
+    const [categories, expenses, tasks, risks, rawVendors, documents] = await Promise.all([
       BudgetDAL.getCategories(eventId),
       BudgetDAL.getExpenses(eventId),
       TasksDAL.getTasks(eventId),
       RiskDAL.getRisks(eventId),
-      supabase.from("vendors").select("*").eq("event_id", eventId).order("name", { ascending: true }),
-      supabase.from("uploaded_documents").select("*").eq("event_id", eventId),
+      VendorsDAL.getVendors(eventId),
+      DocumentsDAL.getDocuments(eventId),
     ]);
 
-    const vendors = [...(vendorsResult.data || [])];
-    const documents = documentsResult.data || [];
+    // Build O(1) map for vendor enrichment from scanned documents
+    const vendorMap = new Map<string, VendorRow>();
+    for (const v of rawVendors) {
+      vendorMap.set(v.name.toLowerCase(), { ...v });
+    }
 
-    // Enrich existing vendors or merge vendors from scanned documents to guarantee email & phone in exports
     for (const doc of documents) {
       const data = doc.extracted_data as Record<string, unknown> | null;
       if (!data) continue;
@@ -79,34 +71,35 @@ export class ExportService {
 
       if (!vendorName && !vendorEmail && !vendorPhone) continue;
 
-      const existingIndex = vendors.findIndex(
-        (v) => v.name.toLowerCase() === vendorName.toLowerCase()
-      );
+      const lowerName = vendorName.toLowerCase();
+      const existing = vendorMap.get(lowerName);
 
-      if (existingIndex >= 0) {
-        if (!vendors[existingIndex].contact_email && vendorEmail) {
-          vendors[existingIndex].contact_email = vendorEmail;
+      if (existing) {
+        if (!existing.contact_email && vendorEmail) {
+          existing.contact_email = vendorEmail;
         }
-        if (!vendors[existingIndex].contact_phone && vendorPhone) {
-          vendors[existingIndex].contact_phone = vendorPhone;
+        if (!existing.contact_phone && vendorPhone) {
+          existing.contact_phone = vendorPhone;
         }
       } else if (vendorName) {
-        vendors.push({
+        vendorMap.set(lowerName, {
           id: `doc_vendor_${doc.id}`,
           event_id: eventId,
           name: vendorName,
           category: String(data.suggestedCategory || "Other"),
           contact_email: vendorEmail,
           contact_phone: vendorPhone,
-          quoted_amount: Number(data.amount || data.actualAmount || 0) || null,
-          status: "contracted",
-          contract_url: doc.file_url || null,
-          notes: String(data.notes || `Scanned from ${doc.file_name}`),
+          quoted_amount: typeof data.totalAmount === "number" ? data.totalAmount : null,
+          status: "inquiry",
+          contract_url: null,
+          notes: String(data.notes || "Imported from scanned document"),
           created_at: doc.created_at,
           updated_at: doc.created_at,
         });
       }
     }
+
+    const vendors = Array.from(vendorMap.values());
 
     return {
       event,

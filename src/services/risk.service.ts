@@ -77,13 +77,14 @@ export class RiskService {
 
     // 2. Individual Category Budget Overruns
     for (const cat of budgetMetrics.categories) {
-      if (cat.isOverBudget && cat.allocatedAmount > 0) {
+      if (cat.isOverBudget) {
+        const percentNotice = cat.allocatedAmount > 0 ? ` (${cat.percentUtilized.toFixed(0)}% utilized)` : " (unallocated category)";
         risks.push({
           eventId,
           title: `Category Budget Exceeded: ${cat.categoryName}`,
           severity: "high",
           category: "budget",
-          explanation: `Expenses for "${cat.categoryName}" exceed the allocated budget by ₹${Math.abs(cat.varianceAmount).toFixed(2)} (${cat.percentUtilized.toFixed(0)}% utilized).`,
+          explanation: `Expenses for "${cat.categoryName}" exceed the allocated budget by ₹${Math.abs(cat.varianceAmount).toFixed(2)}${percentNotice}.`,
           supportingFacts: [
             `Allocated: ₹${cat.allocatedAmount.toFixed(2)}`,
             `Actual: ₹${cat.actualAmount.toFixed(2)}`,

@@ -1,8 +1,9 @@
 import { revalidatePath } from "next/cache";
-import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
+import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { EventsDAL } from "@/lib/dal/events.dal";
 import { BudgetDAL } from "@/lib/dal/budget.dal";
 import { TasksDAL } from "@/lib/dal/tasks.dal";
+import { VendorsDAL } from "@/lib/dal/vendors.dal";
 import { RiskDAL } from "@/lib/dal/risk.dal";
 import { BudgetService, BudgetCalculationResult } from "./budget.service";
 import { TimelineService, TimelineAnalysisResult } from "./timeline.service";
@@ -40,28 +41,16 @@ export class EventOrchestratorService {
     const event = await EventsDAL.getEventById(eventId);
     if (!event) throw new Error("Event not found or access denied");
 
-    const supabase = await createClient();
-
-    // 1. Fetch child entities in parallel
-    const [categories, expenses, tasks, dependencies, vendorsResult] = await Promise.all([
+    // 1. Fetch child entities in parallel via DALs
+    const [categories, expenses, tasks, dependencies, rawVendors] = await Promise.all([
       BudgetDAL.getCategories(eventId),
       BudgetDAL.getExpenses(eventId),
       TasksDAL.getTasks(eventId),
       TasksDAL.getDependencies(eventId),
-      supabase
-        .from("vendors")
-        .select("id, name, category, status")
-        .eq("event_id", eventId),
+      VendorsDAL.getVendors(eventId),
     ]);
 
-    if (vendorsResult.error) {
-      console.error(
-        `[EventOrchestratorService] Vendor query error for event ${eventId}:`,
-        vendorsResult.error.message
-      );
-    }
-
-    const vendors: VendorSummaryItem[] = (vendorsResult.data || []).map((v) => ({
+    const vendors: VendorSummaryItem[] = rawVendors.map((v) => ({
       id: v.id,
       name: v.name,
       category: v.category,

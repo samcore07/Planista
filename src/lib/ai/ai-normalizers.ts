@@ -7,7 +7,7 @@ import {
   EventBlueprint,
   recommendProcessHours,
 } from "@/types/blueprint.types";
-import { BlueprintGenerationInput, CopilotActionProposal } from "@/lib/ai/provider";
+import { BlueprintGenerationInput, CopilotActionProposal } from "./ai.types";
 import { ThemeConceptInput } from "@/lib/dal/theme.dal";
 import { ExtractedDocumentData } from "@/lib/dal/documents.dal";
 

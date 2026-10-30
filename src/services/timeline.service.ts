@@ -30,6 +30,7 @@ export interface TimelineAnalysisResult {
   blockedTasks: TaskItem[];
   completedTasks: TaskItem[];
   pendingTasks: TaskItem[];
+  inProgressTasks: TaskItem[];
   completionPercentage: number;
 }
 
@@ -56,6 +57,7 @@ export class TimelineService {
     const blockedTasks: TaskItem[] = [];
     const completedTasks: TaskItem[] = [];
     const pendingTasks: TaskItem[] = [];
+    const inProgressTasks: TaskItem[] = [];
 
     const nowTime = referenceDate.getTime();
 
@@ -76,6 +78,9 @@ export class TimelineService {
         blockedTasks.push({ ...task, status: "blocked" });
       } else {
         pendingTasks.push(task);
+        if (task.status === "in_progress") {
+          inProgressTasks.push(task);
+        }
       }
 
       // Check overdue safely verifying valid timestamp
@@ -95,54 +100,60 @@ export class TimelineService {
       blockedTasks,
       completedTasks,
       pendingTasks,
+      inProgressTasks,
       completionPercentage,
     };
   }
 
   /**
-   * Detects cycles in task dependencies
+   * Detects circular dependencies using Kahn's topological sort algorithm.
+   * Completely avoids recursion to prevent call-stack exhaustion on large dependency graphs.
    */
   static detectCycle(dependencies: TaskDependency[]): boolean {
+    if (dependencies.length === 0) return false;
+
+    const inDegree = new Map<string, number>();
     const adj = new Map<string, string[]>();
-    for (const dep of dependencies) {
-      const list = adj.get(dep.dependsOnTaskId) || [];
-      list.push(dep.taskId);
-      adj.set(dep.dependsOnTaskId, list);
-    }
-
-    const visited = new Set<string>();
-    const recStack = new Set<string>();
-
-    function dfs(node: string): boolean {
-      visited.add(node);
-      recStack.add(node);
-
-      const neighbors = adj.get(node) || [];
-      for (const neighbor of neighbors) {
-        if (!visited.has(neighbor)) {
-          if (dfs(neighbor)) return true;
-        } else if (recStack.has(neighbor)) {
-          return true; // Cycle detected
-        }
-      }
-
-      recStack.delete(node);
-      return false;
-    }
-
     const allNodes = new Set<string>();
+
     for (const dep of dependencies) {
       allNodes.add(dep.taskId);
       allNodes.add(dep.dependsOnTaskId);
-    }
 
-    for (const node of allNodes) {
-      if (!visited.has(node)) {
-        if (dfs(node)) return true;
+      const list = adj.get(dep.dependsOnTaskId) || [];
+      list.push(dep.taskId);
+      adj.set(dep.dependsOnTaskId, list);
+
+      inDegree.set(dep.taskId, (inDegree.get(dep.taskId) || 0) + 1);
+      if (!inDegree.has(dep.dependsOnTaskId)) {
+        inDegree.set(dep.dependsOnTaskId, 0);
       }
     }
 
-    return false;
+    const queue: string[] = [];
+    for (const [node, degree] of inDegree.entries()) {
+      if (degree === 0) {
+        queue.push(node);
+      }
+    }
+
+    let visitedCount = 0;
+    let head = 0;
+    while (head < queue.length) {
+      const u = queue[head++];
+      visitedCount++;
+
+      const neighbors = adj.get(u) || [];
+      for (const v of neighbors) {
+        const newDegree = (inDegree.get(v) || 0) - 1;
+        inDegree.set(v, newDegree);
+        if (newDegree === 0) {
+          queue.push(v);
+        }
+      }
+    }
+
+    return visitedCount !== allNodes.size;
   }
 
   /**

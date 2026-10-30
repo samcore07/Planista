@@ -1,6 +1,7 @@
 import { createClient, getAuthenticatedUser } from "@/lib/supabase/server";
 import { type Database, type Json, DocumentType, ExtractionStatus, PaymentStatus } from "@/types/database.types";
 import { BudgetDAL, BudgetCategoryRow, ExpenseRow } from "./budget.dal";
+import { VendorsDAL } from "./vendors.dal";
 import { EventOrchestratorService } from "@/services/orchestrator.service";
 
 export type DocumentRow = Database["public"]["Tables"]["uploaded_documents"]["Row"];
@@ -319,12 +320,9 @@ export class DocumentsDAL {
     // 3. Sync or create vendor in the vendors table so email & phone appear in the Event Pack vendor directory & CSV
     try {
       const vendorName = (confirmed.vendorName || confirmed.title.split(" - ")[0] || "Vendor Partner").trim();
-      const { data: existingVendors } = await supabase
-        .from("vendors")
-        .select("*")
-        .eq("event_id", eventId);
+      const existingVendors = await VendorsDAL.getVendors(eventId);
 
-      const matchedVendor = existingVendors?.find(
+      const matchedVendor = existingVendors.find(
         (v) => v.name.toLowerCase() === vendorName.toLowerCase()
       );
 
@@ -336,17 +334,14 @@ export class DocumentsDAL {
       }
 
       if (matchedVendor) {
-        await supabase
-          .from("vendors")
-          .update({
-            contact_email: confirmed.vendorEmail || matchedVendor.contact_email,
-            contact_phone: confirmed.vendorPhone || matchedVendor.contact_phone,
-            status: matchedVendor.status === "inquiry" ? "contracted" : matchedVendor.status,
-            quoted_amount: matchedVendor.quoted_amount || confirmed.actualAmount,
-          })
-          .eq("id", matchedVendor.id);
+        await VendorsDAL.updateVendor(matchedVendor.id, {
+          contact_email: confirmed.vendorEmail || matchedVendor.contact_email,
+          contact_phone: confirmed.vendorPhone || matchedVendor.contact_phone,
+          status: matchedVendor.status === "inquiry" ? "contracted" : matchedVendor.status,
+          quoted_amount: matchedVendor.quoted_amount || confirmed.actualAmount,
+        });
       } else {
-        await supabase.from("vendors").insert({
+        await VendorsDAL.createVendor({
           event_id: eventId,
           name: vendorName,
           category: categoryName,

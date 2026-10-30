@@ -3,7 +3,7 @@
  * Serializes budget expenses, task timelines, and vendor directories into RFC 4180-compliant CSV files.
  */
 
-import { EventExportBundle } from "@/services/export.service";
+import type { EventExportBundle } from "./export.types";
 import { calculateExpenseBalance } from "@/services/budget.service";
 
 /**

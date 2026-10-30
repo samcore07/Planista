@@ -257,7 +257,7 @@ async function TimelinePageContent({ params, searchParams }: TimelinePageProps) 
               <div className="flex items-center gap-1.5 border-b border-border pb-3 mb-4 overflow-x-auto">
                 {[
                   { key: "all", label: "All Tasks", count: tasks.length },
-                  { key: "active", label: "Active", count: timelineMetrics.pendingTasks.length },
+                  { key: "active", label: "Active", count: timelineMetrics.pendingTasks.length + timelineMetrics.inProgressTasks.length },
                   { key: "completed", label: "Completed", count: timelineMetrics.completedTasks.length },
                   { key: "blocked", label: "Blocked", count: timelineMetrics.blockedTasks.length },
                   { key: "overdue", label: "Overdue", count: timelineMetrics.overdueTasks.length },

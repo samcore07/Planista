@@ -4,34 +4,9 @@ import {
   EventBlueprint,
 } from "@/types/blueprint.types";
 import { GroqClient } from "@/lib/ai/groq";
+import type { BlueprintGenerationInput, CopilotActionProposal } from "./ai.types";
 
-export interface BlueprintGenerationInput {
-  eventType: string;
-  title?: string;
-  guestCount: number;
-  totalBudget: number;
-  currency: string;
-  eventDate?: string;
-  location?: string;
-  preferences?: string;
-  dietaryOrAccessibility?: string;
-  constraints?: string;
-}
-
-export interface CopilotActionProposal {
-  actionType: "adjust_budget" | "reschedule_task" | "add_task" | "optimize_category" | "general_advice";
-  explanation: string;
-  summary: string;
-  financialImpact?: {
-    category: string;
-    amountDelta: number;
-  };
-  scheduleImpact?: {
-    taskId: string;
-    proposedDate: string;
-  };
-  tradeOffs: string[];
-}
+export type { BlueprintGenerationInput, CopilotActionProposal };
 
 export interface AIProvider {
   generateBlueprint(input: BlueprintGenerationInput): Promise<EventBlueprint>;

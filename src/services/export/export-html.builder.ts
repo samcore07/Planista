@@ -4,7 +4,7 @@
  * and risk audits into a print-optimized document with embedded CSS stylesheets.
  */
 
-import { EventExportBundle } from "@/services/export.service";
+import type { EventExportBundle } from "./export.types";
 import { roundCurrency, calculateExpenseBalance } from "@/services/budget.service";
 
 /**
