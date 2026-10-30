@@ -100,4 +100,32 @@ describe("TimelineService & Dependency Resolution", () => {
     expect(task2Impact?.originalDueDate).toBe("2026-10-25T00:00:00Z");
     expect(new Date(task2Impact!.proposedDueDate).toISOString()).toBe("2026-11-01T00:00:00.000Z");
   });
+
+  it("safely ignores non-finite delays and invalid date strings", () => {
+    const deps: TaskDependency[] = [
+      { taskId: "task-2", dependsOnTaskId: "task-1" },
+    ];
+
+    expect(TimelineService.propagateTaskDelay("task-1", Number.NaN, sampleTasks, deps)).toEqual([]);
+    expect(TimelineService.propagateTaskDelay("task-1", Number.POSITIVE_INFINITY, sampleTasks, deps)).toEqual([]);
+    expect(TimelineService.propagateTaskDelay("task-1", -3, sampleTasks, deps)).toEqual([]);
+
+    const taskWithInvalidDate: TaskItem = {
+      id: "task-bad-date",
+      eventId: "ev-1",
+      title: "Bad Date Task",
+      description: null,
+      dueDate: "not-a-valid-date-string",
+      priority: "medium",
+      status: "pending",
+      assignee: null,
+      category: null,
+      estimatedDurationHours: 1,
+    };
+
+    expect(TimelineService.propagateTaskDelay("task-bad-date", 5, [taskWithInvalidDate], [])).toEqual([]);
+
+    const analysis = TimelineService.analyzeTimeline([taskWithInvalidDate], [], refDate);
+    expect(analysis.overdueTasks).toHaveLength(0);
+  });
 });

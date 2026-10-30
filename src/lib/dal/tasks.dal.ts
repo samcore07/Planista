@@ -21,7 +21,7 @@ export const createTaskSchema = z.object({
   status: z.enum(["pending", "in_progress", "completed", "blocked"]).default("pending"),
   assignee: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
-  estimatedDurationHours: z.number().nullable().optional(),
+  estimatedDurationHours: z.number().nonnegative("Duration must be non-negative").nullable().optional(),
 });
 
 /**

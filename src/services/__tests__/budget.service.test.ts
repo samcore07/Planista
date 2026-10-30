@@ -135,4 +135,18 @@ describe("BudgetService & Deterministic Currency Calculations", () => {
     // 7200 - 4200 = 3000 outstanding balance left
     expect(result.outstandingBalance).toBe(3000);
   });
+
+  it("safely handles NaN, Infinity and non-finite monetary values without math contamination", () => {
+    expect(roundCurrency(Number.NaN)).toBe(0);
+    expect(roundCurrency(Number.POSITIVE_INFINITY)).toBe(0);
+    expect(roundCurrency(Number.NEGATIVE_INFINITY)).toBe(0);
+
+    const result = BudgetService.calculate(Number.NaN, Number.NaN, [], []);
+    expect(result.totalBudget).toBe(0);
+    expect(result.costPerGuest).toBe(0);
+    expect(result.totalActual).toBe(0);
+    expect(result.outstandingBalance).toBe(0);
+    expect(BudgetService.calculateCostPerGuest(Number.NaN, 10)).toBe(0);
+    expect(BudgetService.calculateCostPerGuest(1000, Number.NaN)).toBe(0);
+  });
 });

@@ -1,4 +1,4 @@
-import { BudgetCalculationResult } from "./budget.service";
+import { BudgetCalculationResult, roundCurrency } from "./budget.service";
 import { TaskItem, TaskDependency, TimelineService } from "./timeline.service";
 
 export type RiskSeverity = "low" | "medium" | "high" | "critical";
@@ -191,13 +191,17 @@ export class RiskService {
     const urgentPayments = expenses.filter((exp) => {
       if (exp.paymentStatus === "fully_paid" || !exp.dueDate) return false;
       const dueMs = new Date(exp.dueDate).getTime();
-      return dueMs >= nowMs && dueMs <= sevenDaysMs && exp.actualAmount > exp.depositPaid;
+      if (Number.isNaN(dueMs)) return false;
+      const outstandingBalance = roundCurrency(exp.actualAmount - exp.depositPaid);
+      return dueMs >= nowMs && dueMs <= sevenDaysMs && outstandingBalance > 0;
     });
 
     if (urgentPayments.length > 0) {
-      const totalUrgent = urgentPayments.reduce(
-        (sum, p) => sum + (p.actualAmount - p.depositPaid),
-        0
+      const totalUrgent = roundCurrency(
+        urgentPayments.reduce(
+          (sum, p) => roundCurrency(sum + roundCurrency(p.actualAmount - p.depositPaid)),
+          0
+        )
       );
       risks.push({
         eventId,
@@ -206,7 +210,7 @@ export class RiskService {
         category: "payment",
         explanation: `${urgentPayments.length} vendor expense(s) have impending payment milestones within the next 7 days.`,
         supportingFacts: urgentPayments.map(
-          (p) => `${p.title}: ₹${(p.actualAmount - p.depositPaid).toFixed(2)} due on ${p.dueDate}`
+          (p) => `${p.title}: ₹${roundCurrency(p.actualAmount - p.depositPaid).toFixed(2)} due on ${p.dueDate}`
         ),
         mitigationAction:
           "Verify funds availability and initiate vendor deposits/disbursements prior to the deadline to avoid service cancellation.",

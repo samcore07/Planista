@@ -3,6 +3,7 @@ import { EventsDAL, EventRow } from "@/lib/dal/events.dal";
 import { BudgetDAL, BudgetCategoryRow, ExpenseRow } from "@/lib/dal/budget.dal";
 import { TasksDAL, TaskRow } from "@/lib/dal/tasks.dal";
 import { RiskDAL, RiskRow } from "@/lib/dal/risk.dal";
+import { roundCurrency } from "@/services/budget.service";
 import { Database } from "@/types/database.types";
 
 export type VendorRow = Database["public"]["Tables"]["vendors"]["Row"];
@@ -219,9 +220,9 @@ export class ExportService {
   static generatePrintableHtml(bundle: EventExportBundle): string {
     const { event, categories, expenses, tasks, risks, vendors, generatedAt } = bundle;
 
-    const totalAllocated = categories.reduce((sum, c) => sum + Number(c.allocated_amount || 0), 0);
-    const totalActual = expenses.reduce((sum, e) => sum + Number(e.actual_amount || 0), 0);
-    const remainingBudget = Number(event.total_budget) - totalActual;
+    const totalAllocated = roundCurrency(categories.reduce((sum, c) => sum + Number(c.allocated_amount || 0), 0));
+    const totalActual = roundCurrency(expenses.reduce((sum, e) => sum + Number(e.actual_amount || 0), 0));
+    const remainingBudget = roundCurrency(Number(event.total_budget || 0) - totalActual);
     const costPerGuest = event.guest_count > 0 ? (totalActual / event.guest_count).toFixed(2) : "0.00";
 
     const completedTasks = tasks.filter((t) => t.status === "completed").length;

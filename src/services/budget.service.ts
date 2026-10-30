@@ -47,9 +47,11 @@ export interface BudgetCalculationResult {
 }
 
 /**
- * Safe currency arithmetic rounding to 2 decimal places
+ * Safe currency arithmetic rounding to 2 decimal places.
+ * Rejects non-finite numbers (NaN, Infinity) returning 0 to prevent downstream math contamination.
  */
 export function roundCurrency(amount: number): number {
+  if (!Number.isFinite(amount)) return 0;
   return Math.round((amount + Number.EPSILON) * 100) / 100;
 }
 
@@ -67,8 +69,8 @@ export class BudgetService {
     categories: BudgetCategoryItem[],
     expenses: ExpenseItem[]
   ): BudgetCalculationResult {
-    const safeTotalBudget = Math.max(0, roundCurrency(totalBudget));
-    const safeGuestCount = Math.max(0, Math.floor(guestCount));
+    const safeTotalBudget = Number.isFinite(totalBudget) ? Math.max(0, roundCurrency(totalBudget)) : 0;
+    const safeGuestCount = Number.isFinite(guestCount) ? Math.max(0, Math.floor(guestCount)) : 0;
 
     let totalAllocated = 0;
     let totalEstimated = 0;
@@ -177,7 +179,7 @@ export class BudgetService {
    * Recalculates cost per guest when guest count updates
    */
   static calculateCostPerGuest(totalBudget: number, guestCount: number): number {
-    if (guestCount <= 0) return 0;
+    if (!Number.isFinite(totalBudget) || !Number.isFinite(guestCount) || guestCount <= 0) return 0;
     return roundCurrency(totalBudget / guestCount);
   }
 }

@@ -78,10 +78,10 @@ export class TimelineService {
         pendingTasks.push(task);
       }
 
-      // Check overdue
+      // Check overdue safely verifying valid timestamp
       if (task.dueDate) {
         const dueTime = new Date(task.dueDate).getTime();
-        if (dueTime < nowTime) {
+        if (!Number.isNaN(dueTime) && dueTime < nowTime) {
           overdueTasks.push(task);
         }
       }
@@ -154,11 +154,14 @@ export class TimelineService {
     tasks: TaskItem[],
     dependencies: TaskDependency[]
   ): DelayedTaskImpact[] {
-    if (delayDays <= 0) return [];
+    if (!Number.isFinite(delayDays) || delayDays <= 0) return [];
 
     const taskMap = new Map<string, TaskItem>(tasks.map((t) => [t.id, t]));
     const delayedTask = taskMap.get(delayedTaskId);
     if (!delayedTask || !delayedTask.dueDate) return [];
+
+    const origDueDateMs = new Date(delayedTask.dueDate).getTime();
+    if (Number.isNaN(origDueDateMs)) return [];
 
     // Map predecessor -> downstream tasks
     const downstreamMap = new Map<string, string[]>();
@@ -175,7 +178,7 @@ export class TimelineService {
     const delayMillis = delayDays * 24 * 60 * 60 * 1000;
 
     // Calculate new date for the originally delayed task
-    const origNewDueDate = new Date(new Date(delayedTask.dueDate).getTime() + delayMillis);
+    const origNewDueDate = new Date(origDueDateMs + delayMillis);
     impacts.push({
       taskId: delayedTask.id,
       taskTitle: delayedTask.title,
@@ -187,8 +190,10 @@ export class TimelineService {
 
     visited.add(delayedTaskId);
 
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
+    let head = 0;
+    while (head < queue.length) {
+      const currentId = queue[head++];
+      if (!currentId) continue;
       const dependents = downstreamMap.get(currentId) || [];
 
       for (const depId of dependents) {
@@ -196,8 +201,9 @@ export class TimelineService {
           visited.add(depId);
           const depTask = taskMap.get(depId);
           if (depTask && depTask.dueDate) {
-            const currentDueDate = new Date(depTask.dueDate);
-            const proposedDueDate = new Date(currentDueDate.getTime() + delayMillis);
+            const currentDueDateMs = new Date(depTask.dueDate).getTime();
+            if (Number.isNaN(currentDueDateMs)) continue;
+            const proposedDueDate = new Date(currentDueDateMs + delayMillis);
 
             impacts.push({
               taskId: depTask.id,

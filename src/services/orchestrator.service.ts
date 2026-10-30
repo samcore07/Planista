@@ -54,6 +54,13 @@ export class EventOrchestratorService {
         .eq("event_id", eventId),
     ]);
 
+    if (vendorsResult.error) {
+      console.error(
+        `[EventOrchestratorService] Vendor query error for event ${eventId}:`,
+        vendorsResult.error.message
+      );
+    }
+
     const vendors: VendorSummaryItem[] = (vendorsResult.data || []).map((v) => ({
       id: v.id,
       name: v.name,

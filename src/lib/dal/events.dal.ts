@@ -92,7 +92,7 @@ export class EventsDAL {
     const eventIds = events.map((e) => e.id);
 
     // 2. Fetch all expenses and tasks concurrently in parallel for minimum TTFB
-    const [{ data: expensesData }, { data: tasksData }] = await Promise.all([
+    const [expensesRes, tasksRes] = await Promise.all([
       supabase
         .from("expenses")
         .select("event_id, actual_amount")
@@ -103,6 +103,16 @@ export class EventsDAL {
         .in("event_id", eventIds)
         .order("due_date", { ascending: true, nullsFirst: false }),
     ]);
+
+    if (expensesRes.error) {
+      throw new Error(`Failed to fetch dashboard expenses: ${expensesRes.error.message}`);
+    }
+    if (tasksRes.error) {
+      throw new Error(`Failed to fetch dashboard tasks: ${tasksRes.error.message}`);
+    }
+
+    const expensesData = expensesRes.data || [];
+    const tasksData = tasksRes.data || [];
 
     const expensesByEvent = new Map<string, number>();
     for (const exp of expensesData || []) {
@@ -186,7 +196,14 @@ export class EventsDAL {
       .eq("id", eventId)
       .single();
 
-    if (error || !data) {
+    if (error) {
+      if (error.code === "PGRST116") {
+        return null;
+      }
+      throw new Error(`Failed to retrieve event ${eventId}: ${error.message}`);
+    }
+
+    if (!data) {
       return null;
     }
 
