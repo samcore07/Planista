@@ -114,4 +114,14 @@ describe("VendorsDAL", () => {
     const result = await VendorsDAL.createVendors(batch);
     expect(result).toEqual(mockCreated);
   });
+
+  it("rejects empty or whitespace identifiers defensively", async () => {
+    vi.mocked(getAuthenticatedUser).mockResolvedValue(mockUser as unknown as Awaited<ReturnType<typeof getAuthenticatedUser>>);
+
+    await expect(VendorsDAL.getVendors("")).rejects.toThrow("Invalid event identifier");
+    await expect(VendorsDAL.getVendors("   ")).rejects.toThrow("Invalid event identifier");
+    await expect(VendorsDAL.getVendorByName("", "Acme")).rejects.toThrow("Invalid event or vendor name identifier");
+    await expect(VendorsDAL.getVendorByName("ev-123", "")).rejects.toThrow("Invalid event or vendor name identifier");
+    await expect(VendorsDAL.updateVendor("", { name: "Test" })).rejects.toThrow("Invalid vendor identifier");
+  });
 });

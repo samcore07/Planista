@@ -9,8 +9,23 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { TasksDAL, createTaskSchema, updateTaskSchema } from "@/lib/dal/tasks.dal";
-import { TimelineService } from "@/services/timeline.service";
+import { TimelineService, TaskItem } from "@/services/timeline.service";
 import { EventOrchestratorService } from "@/services/orchestrator.service";
+import {
+  getFormString,
+  getOptionalFormString,
+  getOptionalFormNumber,
+} from "@/lib/form-utils";
+
+function parsePriority(val: string | null): "low" | "medium" | "high" | "critical" {
+  if (val === "low" || val === "high" || val === "critical") return val;
+  return "medium";
+}
+
+function parseStatus(val: string | null): "pending" | "in_progress" | "completed" | "blocked" {
+  if (val === "in_progress" || val === "completed" || val === "blocked") return val;
+  return "pending";
+}
 
 /**
  * Creates a new milestone task under the specified event timeline.
@@ -19,16 +34,14 @@ import { EventOrchestratorService } from "@/services/orchestrator.service";
  * @param formData - Form fields containing task parameters.
  */
 export async function createTaskAction(eventId: string, formData: FormData): Promise<void> {
-  const title = formData.get("title") as string;
-  const description = (formData.get("description") as string) || null;
-  const dueDate = (formData.get("dueDate") as string) || null;
-  const priority = (formData.get("priority") as "low" | "medium" | "high" | "critical") || "medium";
-  const status = (formData.get("status") as "pending" | "in_progress" | "completed" | "blocked") || "pending";
-  const assignee = (formData.get("assignee") as string) || null;
-  const category = (formData.get("category") as string) || null;
-  const estimatedDurationHours = formData.get("estimatedDurationHours")
-    ? Number(formData.get("estimatedDurationHours"))
-    : null;
+  const title = getFormString(formData, "title");
+  const description = getOptionalFormString(formData, "description");
+  const dueDate = getOptionalFormString(formData, "dueDate");
+  const priority = parsePriority(getOptionalFormString(formData, "priority"));
+  const status = parseStatus(getOptionalFormString(formData, "status"));
+  const assignee = getOptionalFormString(formData, "assignee");
+  const category = getOptionalFormString(formData, "category");
+  const estimatedDurationHours = getOptionalFormNumber(formData, "estimatedDurationHours");
 
   const parsed = createTaskSchema.safeParse({
     eventId,
@@ -64,15 +77,16 @@ export async function updateTaskAction(
   taskId: string,
   formData: FormData
 ): Promise<void> {
-  const title = formData.get("title") as string;
-  const description = (formData.get("description") as string) || null;
-  const dueDate = (formData.get("dueDate") as string) || null;
-  const priority = (formData.get("priority") as "low" | "medium" | "high" | "critical") || undefined;
-  const status = (formData.get("status") as "pending" | "in_progress" | "completed" | "blocked") || undefined;
-  const assignee = (formData.get("assignee") as string) || null;
-  const category = (formData.get("category") as string) || null;
-  const estimatedDurationHoursRaw = formData.get("estimatedDurationHours");
-  const estimatedDurationHours = estimatedDurationHoursRaw ? Number(estimatedDurationHoursRaw) : null;
+  const title = getOptionalFormString(formData, "title") ?? undefined;
+  const description = getOptionalFormString(formData, "description");
+  const dueDate = getOptionalFormString(formData, "dueDate");
+  const rawPriority = getOptionalFormString(formData, "priority");
+  const priority = rawPriority ? parsePriority(rawPriority) : undefined;
+  const rawStatus = getOptionalFormString(formData, "status");
+  const status = rawStatus ? parseStatus(rawStatus) : undefined;
+  const assignee = getOptionalFormString(formData, "assignee");
+  const category = getOptionalFormString(formData, "category");
+  const estimatedDurationHours = getOptionalFormNumber(formData, "estimatedDurationHours");
 
   const parsed = updateTaskSchema.safeParse({
     title,
@@ -136,7 +150,7 @@ export async function addDependencyAction(
   taskId: string,
   formData: FormData
 ): Promise<void> {
-  const dependsOnTaskId = formData.get("dependsOnTaskId") as string;
+  const dependsOnTaskId = getFormString(formData, "dependsOnTaskId");
 
   try {
     await TasksDAL.addDependency(eventId, taskId, dependsOnTaskId);
@@ -178,14 +192,14 @@ export async function applyScheduleShiftAction(
       TasksDAL.getDependencies(eventId),
     ]);
 
-    const taskItems = tasks.map((t) => ({
+    const taskItems: TaskItem[] = tasks.map((t) => ({
       id: t.id,
       eventId: t.event_id,
       title: t.title,
       description: t.description,
       dueDate: t.due_date,
-      priority: t.priority as "low" | "medium" | "high" | "critical",
-      status: t.status as "pending" | "in_progress" | "completed" | "blocked",
+      priority: parsePriority(t.priority),
+      status: parseStatus(t.status),
       assignee: t.assignee,
       category: t.category,
       estimatedDurationHours: t.estimated_duration_hours ? Number(t.estimated_duration_hours) : null,

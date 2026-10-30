@@ -10,6 +10,72 @@ import { TimelineService, TimelineAnalysisResult } from "./timeline.service";
 import { RiskService, EvaluatedRisk, VendorSummaryItem } from "./risk.service";
 import { IdempotencyGuard } from "@/lib/idempotency";
 
+function toVendorStatus(raw: string | null | undefined): "inquiry" | "quoted" | "contracted" | "declined" {
+  switch (raw) {
+    case "quoted":
+    case "contracted":
+    case "declined":
+      return raw;
+    default:
+      return "inquiry";
+  }
+}
+
+function toPaymentStatus(raw: string | null | undefined): "unpaid" | "deposit_paid" | "fully_paid" {
+  switch (raw) {
+    case "deposit_paid":
+    case "fully_paid":
+      return raw;
+    default:
+      return "unpaid";
+  }
+}
+
+function toTaskPriority(raw: string | null | undefined): "low" | "medium" | "high" | "critical" {
+  switch (raw) {
+    case "low":
+    case "high":
+    case "critical":
+      return raw;
+    default:
+      return "medium";
+  }
+}
+
+function toTaskStatus(raw: string | null | undefined): "pending" | "in_progress" | "completed" | "blocked" {
+  switch (raw) {
+    case "in_progress":
+    case "completed":
+    case "blocked":
+      return raw;
+    default:
+      return "pending";
+  }
+}
+
+function toRiskSeverity(raw: string | null | undefined): "low" | "medium" | "high" | "critical" {
+  switch (raw) {
+    case "medium":
+    case "high":
+    case "critical":
+      return raw;
+    default:
+      return "low";
+  }
+}
+
+function toRiskCategory(raw: string | null | undefined): "budget" | "timeline" | "vendor" | "venue" | "payment" {
+  switch (raw) {
+    case "timeline":
+    case "vendor":
+    case "venue":
+    case "payment":
+      return raw;
+    default:
+      return "budget";
+  }
+}
+
 export interface RecalculatedEventState {
   eventId: string;
   budget: BudgetCalculationResult;
@@ -54,7 +120,7 @@ export class EventOrchestratorService {
       id: v.id,
       name: v.name,
       category: v.category,
-      status: v.status as "inquiry" | "quoted" | "contracted" | "declined",
+      status: toVendorStatus(v.status),
     }));
 
     // 2. Compute Budget Metrics
@@ -76,7 +142,7 @@ export class EventOrchestratorService {
         actualAmount: Number(e.actual_amount || 0),
         depositPaid: Number(e.deposit_paid || 0),
         dueDate: e.due_date,
-        paymentStatus: e.payment_status as "unpaid" | "deposit_paid" | "fully_paid",
+        paymentStatus: toPaymentStatus(e.payment_status),
       }))
     );
 
@@ -87,8 +153,8 @@ export class EventOrchestratorService {
       title: t.title,
       description: t.description,
       dueDate: t.due_date,
-      priority: t.priority as "low" | "medium" | "high" | "critical",
-      status: t.status as "pending" | "in_progress" | "completed" | "blocked",
+      priority: toTaskPriority(t.priority),
+      status: toTaskStatus(t.status),
       assignee: t.assignee,
       category: t.category,
       estimatedDurationHours: t.estimated_duration_hours ? Number(t.estimated_duration_hours) : null,
@@ -174,7 +240,7 @@ export class EventOrchestratorService {
         actualAmount: Number(e.actual_amount || 0),
         depositPaid: Number(e.deposit_paid || 0),
         dueDate: e.due_date,
-        paymentStatus: e.payment_status as "unpaid" | "deposit_paid" | "fully_paid",
+        paymentStatus: toPaymentStatus(e.payment_status),
       }))
     );
 
@@ -185,8 +251,8 @@ export class EventOrchestratorService {
         title: t.title,
         description: t.description,
         dueDate: t.due_date,
-        priority: t.priority as "low" | "medium" | "high" | "critical",
-        status: t.status as "pending" | "in_progress" | "completed" | "blocked",
+        priority: toTaskPriority(t.priority),
+        status: toTaskStatus(t.status),
         assignee: t.assignee,
         category: t.category,
         estimatedDurationHours: t.estimated_duration_hours ? Number(t.estimated_duration_hours) : null,
@@ -205,10 +271,10 @@ export class EventOrchestratorService {
         id: r.id,
         eventId: r.event_id,
         title: r.title,
-        severity: r.severity as "low" | "medium" | "high" | "critical",
-        category: r.category as "budget" | "timeline" | "vendor" | "venue" | "payment",
+        severity: toRiskSeverity(r.severity),
+        category: toRiskCategory(r.category),
         explanation: r.explanation,
-        supportingFacts: (r.supporting_facts as string[]) || [],
+        supportingFacts: Array.isArray(r.supporting_facts) ? (r.supporting_facts as string[]) : [],
         mitigationAction: r.mitigation_action,
         isResolved: r.is_resolved,
       })),

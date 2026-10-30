@@ -161,4 +161,27 @@ describe("LogisticsService - Critical Path Method (CPM)", () => {
     expect(graph.width).toBeGreaterThan(0);
     expect(graph.height).toBeGreaterThan(0);
   });
+
+  it("handles duplicate dependency edges and self-dependencies gracefully", () => {
+    const redundantDeps: TaskDependency[] = [
+      { taskId: "t2", dependsOnTaskId: "t1" },
+      { taskId: "t2", dependsOnTaskId: "t1" }, // Duplicate edge
+      { taskId: "t3", dependsOnTaskId: "t3" }, // Self-dependency
+    ];
+
+    const analysis = LogisticsService.analyzeCriticalPath(sampleTasks, redundantDeps);
+    expect(analysis.allTasks.length).toBe(4);
+    expect(analysis.totalProjectDurationHours).toBeGreaterThan(0);
+  });
+
+  it("handles empty task list in CPM analysis and graph layout", () => {
+    const emptyAnalysis = LogisticsService.analyzeCriticalPath([], []);
+    expect(emptyAnalysis.allTasks).toEqual([]);
+    expect(emptyAnalysis.criticalPath).toEqual([]);
+    expect(emptyAnalysis.totalProjectDurationHours).toBe(0);
+
+    const emptyGraph = LogisticsService.layoutDependencyGraph([], [], new Set());
+    expect(emptyGraph.nodes).toEqual([]);
+    expect(emptyGraph.edges).toEqual([]);
+  });
 });

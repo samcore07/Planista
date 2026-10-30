@@ -112,13 +112,23 @@ export class TimelineService {
   static detectCycle(dependencies: TaskDependency[]): boolean {
     if (dependencies.length === 0) return false;
 
+    // Direct self-dependency check
+    for (const dep of dependencies) {
+      if (dep.taskId === dep.dependsOnTaskId) return true;
+    }
+
     const inDegree = new Map<string, number>();
     const adj = new Map<string, string[]>();
     const allNodes = new Set<string>();
+    const seenEdges = new Set<string>();
 
     for (const dep of dependencies) {
       allNodes.add(dep.taskId);
       allNodes.add(dep.dependsOnTaskId);
+
+      const edgeKey = `${dep.dependsOnTaskId}->${dep.taskId}`;
+      if (seenEdges.has(edgeKey)) continue;
+      seenEdges.add(edgeKey);
 
       const list = adj.get(dep.dependsOnTaskId) || [];
       list.push(dep.taskId);

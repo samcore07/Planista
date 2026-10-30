@@ -73,6 +73,28 @@ describe("TimelineService & Dependency Resolution", () => {
     ];
     expect(TimelineService.detectCycle(acyclicDeps)).toBe(false);
 
+    // Empty dependencies
+    expect(TimelineService.detectCycle([])).toBe(false);
+
+    // Self-dependency
+    expect(TimelineService.detectCycle([{ taskId: "task-1", dependsOnTaskId: "task-1" }])).toBe(true);
+
+    // Duplicate edges in acyclic graph should not falsely trigger cycle
+    const duplicateAcyclic: TaskDependency[] = [
+      { taskId: "task-2", dependsOnTaskId: "task-1" },
+      { taskId: "task-2", dependsOnTaskId: "task-1" },
+      { taskId: "task-3", dependsOnTaskId: "task-2" },
+    ];
+    expect(TimelineService.detectCycle(duplicateAcyclic)).toBe(false);
+
+    // Disconnected components with one cyclic component
+    const disconnectedWithCycle: TaskDependency[] = [
+      { taskId: "a2", dependsOnTaskId: "a1" },
+      { taskId: "c2", dependsOnTaskId: "c1" },
+      { taskId: "c1", dependsOnTaskId: "c2" },
+    ];
+    expect(TimelineService.detectCycle(disconnectedWithCycle)).toBe(true);
+
     const cyclicDeps: TaskDependency[] = [
       { taskId: "task-2", dependsOnTaskId: "task-1" },
       { taskId: "task-3", dependsOnTaskId: "task-2" },

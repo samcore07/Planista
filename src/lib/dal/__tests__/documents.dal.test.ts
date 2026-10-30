@@ -182,4 +182,30 @@ describe("DocumentsDAL Unit Tests", () => {
       await expect(DocumentsDAL.deleteDocument("evt_1", "doc_1")).rejects.toThrow(/database connection failed/i);
     });
   });
+
+  describe("parseExtractedData", () => {
+    it("safely handles null, undefined, and non-objects", () => {
+      expect(DocumentsDAL.parseExtractedData(null)).toBeNull();
+      expect(DocumentsDAL.parseExtractedData(undefined)).toBeNull();
+      expect(DocumentsDAL.parseExtractedData("string")).toBeNull();
+      expect(DocumentsDAL.parseExtractedData(123)).toBeNull();
+    });
+
+    it("parses valid JSON data with defaults for missing fields", () => {
+      const parsed = DocumentsDAL.parseExtractedData({
+        vendorName: "Floral Elegance",
+        amount: 3500,
+        documentType: "invoice",
+      });
+
+      expect(parsed).not.toBeNull();
+      expect(parsed?.vendorName).toBe("Floral Elegance");
+      expect(parsed?.amount).toBe(3500);
+      expect(parsed?.documentType).toBe("invoice");
+      expect(parsed?.suggestedCategory).toBe("General");
+      expect(parsed?.lineItems).toEqual([]);
+      expect(parsed?.uncertainties).toEqual([]);
+      expect(parsed?.isOcrAvailable).toBe(false);
+    });
+  });
 });

@@ -8,12 +8,12 @@ import { type NextRequest, type NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 /**
- * Edge middleware handler executing on every incoming matching request.
+ * Edge proxy handler executing on every incoming matching request.
  *
  * @param request - NextRequest representation of the incoming HTTP request.
  * @returns Evaluated NextResponse with updated session headers and cookie mutations.
  */
-export async function middleware(request: NextRequest): Promise<NextResponse> {
+export async function proxy(request: NextRequest): Promise<NextResponse> {
   return await updateSession(request);
 }
 

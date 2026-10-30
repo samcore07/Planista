@@ -9,6 +9,17 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { BudgetDAL, createCategorySchema, createExpenseSchema, updateExpenseSchema } from "@/lib/dal/budget.dal";
 import { EventOrchestratorService } from "@/services/orchestrator.service";
+import {
+  getFormString,
+  getOptionalFormString,
+  getFormNumber,
+  getOptionalFormNumber,
+} from "@/lib/form-utils";
+
+function parsePaymentStatus(val: string | null): "unpaid" | "deposit_paid" | "fully_paid" {
+  if (val === "deposit_paid" || val === "fully_paid") return val;
+  return "unpaid";
+}
 
 /**
  * Server action to create a new budget department category.
@@ -17,8 +28,8 @@ import { EventOrchestratorService } from "@/services/orchestrator.service";
  * @param formData - Form data containing name and allocatedAmount.
  */
 export async function createCategoryAction(eventId: string, formData: FormData): Promise<void> {
-  const name = formData.get("name") as string;
-  const allocatedAmount = Number(formData.get("allocatedAmount") || 0);
+  const name = getFormString(formData, "name");
+  const allocatedAmount = getFormNumber(formData, "allocatedAmount", 0);
 
   const parsed = createCategorySchema.safeParse({
     eventId,
@@ -44,15 +55,15 @@ export async function createCategoryAction(eventId: string, formData: FormData):
 }
 
 export async function createExpenseAction(eventId: string, formData: FormData): Promise<void> {
-  const categoryIdRaw = formData.get("categoryId") as string;
+  const categoryIdRaw = getOptionalFormString(formData, "categoryId");
   const categoryId = categoryIdRaw && categoryIdRaw !== "uncategorized" ? categoryIdRaw : null;
-  const title = formData.get("title") as string;
-  const estimatedAmount = Number(formData.get("estimatedAmount") || 0);
-  const actualAmount = Number(formData.get("actualAmount") || 0);
-  const depositPaid = Number(formData.get("depositPaid") || 0);
-  const dueDate = (formData.get("dueDate") as string) || null;
-  const paymentStatus = (formData.get("paymentStatus") as "unpaid" | "deposit_paid" | "fully_paid") || "unpaid";
-  const notes = (formData.get("notes") as string) || null;
+  const title = getFormString(formData, "title");
+  const estimatedAmount = getFormNumber(formData, "estimatedAmount", 0);
+  const actualAmount = getFormNumber(formData, "actualAmount", 0);
+  const depositPaid = getFormNumber(formData, "depositPaid", 0);
+  const dueDate = getOptionalFormString(formData, "dueDate");
+  const paymentStatus = parsePaymentStatus(getOptionalFormString(formData, "paymentStatus"));
+  const notes = getOptionalFormString(formData, "notes");
 
   const parsed = createExpenseSchema.safeParse({
     eventId,
@@ -88,24 +99,25 @@ export async function updateExpenseAction(
   expenseId: string,
   formData: FormData
 ): Promise<void> {
-  const categoryIdRaw = formData.get("categoryId") as string;
+  const categoryIdRaw = getOptionalFormString(formData, "categoryId");
   const categoryId = categoryIdRaw && categoryIdRaw !== "uncategorized" ? categoryIdRaw : null;
-  const title = formData.get("title") as string;
-  const estimatedAmountRaw = formData.get("estimatedAmount");
-  const actualAmountRaw = formData.get("actualAmount");
-  const depositPaidRaw = formData.get("depositPaid");
-  const dueDate = (formData.get("dueDate") as string) || null;
-  const paymentStatus = formData.get("paymentStatus") as "unpaid" | "deposit_paid" | "fully_paid" | null;
-  const notes = (formData.get("notes") as string) || null;
+  const title = getOptionalFormString(formData, "title") ?? undefined;
+  const estimatedAmount = getOptionalFormNumber(formData, "estimatedAmount");
+  const actualAmount = getOptionalFormNumber(formData, "actualAmount");
+  const depositPaid = getOptionalFormNumber(formData, "depositPaid");
+  const dueDate = getOptionalFormString(formData, "dueDate");
+  const rawPaymentStatus = getOptionalFormString(formData, "paymentStatus");
+  const paymentStatus = rawPaymentStatus ? parsePaymentStatus(rawPaymentStatus) : undefined;
+  const notes = getOptionalFormString(formData, "notes");
 
   const parsed = updateExpenseSchema.safeParse({
     categoryId,
     title,
-    estimatedAmount: estimatedAmountRaw !== null ? Number(estimatedAmountRaw) : undefined,
-    actualAmount: actualAmountRaw !== null ? Number(actualAmountRaw) : undefined,
-    depositPaid: depositPaidRaw !== null ? Number(depositPaidRaw) : undefined,
+    estimatedAmount: estimatedAmount !== null ? estimatedAmount : undefined,
+    actualAmount: actualAmount !== null ? actualAmount : undefined,
+    depositPaid: depositPaid !== null ? depositPaid : undefined,
     dueDate: dueDate ? new Date(dueDate).toISOString().split("T")[0] : null,
-    paymentStatus: paymentStatus || undefined,
+    paymentStatus,
     notes,
   });
 

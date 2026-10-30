@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAuthenticatedUser } from "@/lib/supabase/server";
 import { EventsDAL } from "@/lib/dal/events.dal";
-import { DocumentsDAL, ExtractedDocumentData } from "@/lib/dal/documents.dal";
+import { DocumentsDAL } from "@/lib/dal/documents.dal";
 import { BudgetDAL } from "@/lib/dal/budget.dal";
 import { GroqClient } from "@/lib/ai/groq";
 import { uploadDocumentAction, confirmScannedExpenseAction, deleteDocumentAction } from "./actions";
@@ -49,7 +49,7 @@ export default async function ScannerPage({ params, searchParams }: PageProps) {
   ]);
 
   const activeDoc = docId ? documents.find((d) => d.id === docId) : null;
-  const extractedData = (activeDoc?.extracted_data as unknown as ExtractedDocumentData) || null;
+  const extractedData = DocumentsDAL.parseExtractedData(activeDoc?.extracted_data);
 
   // Detect discrepancies if active document has extracted data
   const discrepancyReport = extractedData

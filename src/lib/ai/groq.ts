@@ -32,10 +32,6 @@ const GROQ_API_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
 
 let cachedTextModel: string | null = null;
 
-
-
-
-
 export class GroqClient {
   static getApiKey(): string | undefined {
     const raw = process.env.GROQ_API_KEY || env.GROQ_API_KEY;

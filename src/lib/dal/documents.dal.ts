@@ -38,6 +38,32 @@ export interface DiscrepancyReport {
 }
 
 export class DocumentsDAL {
+  /**
+   * Safely parses arbitrary JSON or database data into a strongly-typed ExtractedDocumentData object.
+   */
+  static parseExtractedData(data: unknown): ExtractedDocumentData | null {
+    if (!data || typeof data !== "object") return null;
+    const obj = data as Record<string, unknown>;
+    const rawType = String(obj.documentType || "invoice").toLowerCase().trim();
+    const documentType: DocumentType =
+      rawType === "receipt" || rawType === "quote" || rawType === "contract"
+        ? (rawType as DocumentType)
+        : "invoice";
+
+    return {
+      vendorName: typeof obj.vendorName === "string" ? obj.vendorName : "Unknown Vendor",
+      vendorEmail: typeof obj.vendorEmail === "string" ? obj.vendorEmail : null,
+      vendorPhone: typeof obj.vendorPhone === "string" ? obj.vendorPhone : null,
+      amount: typeof obj.amount === "number" && Number.isFinite(obj.amount) ? obj.amount : 0,
+      date: typeof obj.date === "string" ? obj.date : new Date().toISOString().split("T")[0]!,
+      suggestedCategory: typeof obj.suggestedCategory === "string" ? obj.suggestedCategory : "General",
+      documentType,
+      lineItems: Array.isArray(obj.lineItems) ? obj.lineItems.map(String) : [],
+      uncertainties: Array.isArray(obj.uncertainties) ? obj.uncertainties.map(String) : [],
+      isOcrAvailable: Boolean(obj.isOcrAvailable),
+    };
+  }
+
   static async getDocuments(eventId: string): Promise<DocumentRow[]> {
     const user = await getAuthenticatedUser();
     if (!user) throw new Error("Unauthorized");
