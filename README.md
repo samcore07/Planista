@@ -11,6 +11,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase_RLS-336791?style=for-the-badge&logo=postgresql)](https://supabase.com/)
 [![Groq LLaMA](https://img.shields.io/badge/AI_Engine-Groq_LLaMA_3.3_70B-F55036?style=for-the-badge)](https://groq.com/)
 
+[![Deployment](https://img.shields.io/badge/Deployment-Vercel_Production-000000?style=flat-square&logo=vercel)](https://planista-five.vercel.app)
 [![CI Pipeline](https://img.shields.io/badge/CI_Pipeline-Passing-brightgreen?style=flat-square&logo=githubactions)](.github/workflows/ci.yml)
 [![SonarCloud Quality Gate](https://img.shields.io/badge/SonarCloud-Grade_A_Passed-success?style=flat-square&logo=sonarcloud)](https://sonarcloud.io/)
 [![DeepSource](https://img.shields.io/badge/DeepSource-Clean_Audit-success?style=flat-square)](https://deepsource.io/)
